@@ -1,0 +1,51 @@
+/* Base styles */
+body {
+    background-color: black;
+    color: white;
+    display: flex;
+    flex-direction: column;       /* Stack header, main, footer vertically */
+    justify-content: space-between; /* Push footer to bottom */
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Main content styles */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Typography */
+h1 {
+    font-size: 50px;
+    font-family: "verdana";
+    font-weight: normal;
+}
+
+h2 {
+    font-family: "verdana";
+    font-weight: 300;
+    font-size: 42px;
+}
+
+h3 {
+    font-family: "verdana";
+    font-size: 21px;
+    color: gray;
+}
+
+/* Links */
+a {
+    color: aquamarine;
+    font-size: 16px;
+}
+
+/* Footer styles */
+footer {
+    color: gray;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1em;
+}
