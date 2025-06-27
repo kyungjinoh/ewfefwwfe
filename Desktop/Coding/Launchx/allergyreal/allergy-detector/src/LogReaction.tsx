@@ -193,23 +193,23 @@ const LogReaction: React.FC = () => {
         const allergensArr = Array.isArray(data.product.allergens_tags) ? data.product.allergens_tags.map((a: string) => a.replace(/^en:/, '').replace(/_/g, ' ').toLowerCase()) : [];
         const groqResponse = await GroqService.extractIngredients(ingredientsText);
         const list = cleanAIResponse(groqResponse);
-        // Add allergens (lowercased, no duplicates)
-        const allItems = [
-          ...list,
-          ...allergensArr.filter((a: string) => !list.includes(a))
-        ];
-        if (allItems.length === 0) {
-          setProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'No ingredients found for this barcode.' } : pr));
-        } else {
-          setProducts(p => p.map((pr, i) => i === idx ? {
-            ...pr,
-            isBarcodeLoading: false,
-            barcodeError: '',
-            commonList: [
-              ...pr.commonList,
-              ...allItems.filter((ing: string) => !pr.commonList.map(x => x.toLowerCase().trim()).includes(ing.toLowerCase().trim()))
-            ]
-          } : pr));
+          // Add allergens (lowercased, no duplicates)
+          const allItems = [
+            ...list,
+            ...allergensArr.filter((a: string) => !list.includes(a))
+          ];
+          if (allItems.length === 0) {
+            setProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'No ingredients found for this barcode.' } : pr));
+          } else {
+            setProducts(p => p.map((pr, i) => i === idx ? {
+              ...pr,
+              isBarcodeLoading: false,
+              barcodeError: '',
+              commonList: [
+                ...pr.commonList,
+                ...allItems.filter((ing: string) => !pr.commonList.map(x => x.toLowerCase().trim()).includes(ing.toLowerCase().trim()))
+              ]
+            } : pr));
         }
       } else {
         setProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'Product not found.' } : pr));
@@ -315,14 +315,14 @@ const LogReaction: React.FC = () => {
               maxWidth: '1200px'
             }}>
               {/* Log a New Condition Card */}
-              <div className="log-reaction-card">
-                <div className="log-reaction-icon">
+            <div className="log-reaction-card">
+              <div className="log-reaction-icon">
                   <ClipboardCheck size={48} />
-                </div>
-                <h1 className="log-reaction-title">Log a New Condition</h1>
-                <p className="log-reaction-desc">Quickly record a new allergic condition or symptom event. Stay on top of your health and help your care team with accurate, up-to-date information.</p>
-                <button className="log-reaction-btn" onClick={() => setStep(1)}>Begin Logging</button>
               </div>
+              <h1 className="log-reaction-title">Log a New Condition</h1>
+              <p className="log-reaction-desc">Quickly record a new allergic condition or symptom event. Stay on top of your health and help your care team with accurate, up-to-date information.</p>
+              <button className="log-reaction-btn" onClick={() => setStep(1)}>Begin Logging</button>
+            </div>
 
               {/* Log Safe Food Card */}
               <div className="log-reaction-card">
@@ -600,23 +600,23 @@ const LogReaction: React.FC = () => {
                                     try {
                                       const groqResponse = await GroqService.extractIngredients(product.scanText);
                                       const list = cleanAIResponse(groqResponse);
-                                      if (list.length === 0) {
-                                        const scanTextLower = product.scanText.trim().toLowerCase();
-                                        setProducts(p => p.map((pr, i) => i === idx ? {
-                                          ...pr,
-                                          commonList: pr.commonList.map(i => i.toLowerCase().trim()).includes(scanTextLower) || isDeleted(product.scanText) ? pr.commonList : [...pr.commonList, product.scanText.trim().toLowerCase()]
-                                        } : pr));
-                                      } else {
-                                        setProducts(p => p.map((pr, i) => i === idx ? {
-                                          ...pr,
-                                          commonList: [
-                                            ...pr.commonList,
-                                            ...list.filter((i: string) => {
-                                              const lower = i.toLowerCase().trim();
-                                              return !pr.commonList.map(x => x.toLowerCase().trim()).includes(lower) && !isDeleted(i);
-                                            })
-                                          ]
-                                        } : pr));
+                                        if (list.length === 0) {
+                                          const scanTextLower = product.scanText.trim().toLowerCase();
+                                          setProducts(p => p.map((pr, i) => i === idx ? {
+                                            ...pr,
+                                            commonList: pr.commonList.map(i => i.toLowerCase().trim()).includes(scanTextLower) || isDeleted(product.scanText) ? pr.commonList : [...pr.commonList, product.scanText.trim().toLowerCase()]
+                                          } : pr));
+                                        } else {
+                                          setProducts(p => p.map((pr, i) => i === idx ? {
+                                            ...pr,
+                                            commonList: [
+                                              ...pr.commonList,
+                                              ...list.filter((i: string) => {
+                                                const lower = i.toLowerCase().trim();
+                                                return !pr.commonList.map(x => x.toLowerCase().trim()).includes(lower) && !isDeleted(i);
+                                              })
+                                            ]
+                                          } : pr));
                                       }
                                     } catch (err: any) {
                                       const scanTextLower = product.scanText.trim().toLowerCase();
@@ -883,8 +883,8 @@ const LogReaction: React.FC = () => {
                         )}
                       </div>
                     ))}
-                  </div>
-                )}
+            </div>
+          )}
               </div>
               <div className="step-navigation" style={{ marginTop: 32, width: '100%', maxWidth: 400, display: 'flex', justifyContent: 'center', gap: 24 }}>
                 <button className="log-reaction-btn secondary" style={{ fontWeight: 700, fontSize: 16, borderRadius: 10, padding: '0.7rem 2.2rem', background: 'linear-gradient(90deg,#e0e7ef,#bae6fd)', color: '#0ea5e9', border: '1.5px solid #38bdf8' }} onClick={() => setStep(3)}>

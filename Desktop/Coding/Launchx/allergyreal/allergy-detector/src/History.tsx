@@ -160,50 +160,50 @@ const History: React.FC = () => {
   //   }
   // };
 
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      // Always fetch from live logs collection first
+    const fetchLogs = async () => {
+      setLoading(true);
+      try {
+        // Always fetch from live logs collection first
       const q = query(collection(db, 'logs'), where('uid', '==', user?.uid));
-      const querySnapshot = await getDocs(q);
-      console.log('History: Found', querySnapshot.size, 'logs in Firebase');
-      
-      const logsData: AllergyLog[] = [];
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        console.log('History: Processing log:', doc.id, 'UID:', data.uid, 'Time:', data.time, 'Products:', data.products?.length || 0);
-        logsData.push({
-          time: data.time,
-          severity: data.severity,
-          symptoms: data.symptoms || [],
-          symptomDesc: data.symptomDesc || '',
-          aiAnalysis: data.aiAnalysis || '',
-          products: data.products || [],
-          environmentalCause: data.environmentalCause || '',
-          docId: doc.id,
+        const querySnapshot = await getDocs(q);
+        console.log('History: Found', querySnapshot.size, 'logs in Firebase');
+        
+        const logsData: AllergyLog[] = [];
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          console.log('History: Processing log:', doc.id, 'UID:', data.uid, 'Time:', data.time, 'Products:', data.products?.length || 0);
+          logsData.push({
+            time: data.time,
+            severity: data.severity,
+            symptoms: data.symptoms || [],
+            symptomDesc: data.symptomDesc || '',
+            aiAnalysis: data.aiAnalysis || '',
+            products: data.products || [],
+            environmentalCause: data.environmentalCause || '',
+            docId: doc.id,
+          });
         });
-      });
-      
-      console.log('History: Final logs data:', logsData);
-      console.log('History: Logs data length:', logsData.length);
-      setLogs(logsData);
-      setDisplayedLogs(logsData.slice(0, logsToShow));
-      setHasMoreLogs(logsData.length > logsToShow);
-      // Update the history cache
-      const newLogsHash = createLogsHash(logsData);
-      await saveHistoryToFirebase(logsData, newLogsHash);
-      setLoading(false);
-    } catch (err) {
-      // If live fetch fails, fallback to cache
-      const savedHistory = await loadHistoryFromFirebase();
-      if (savedHistory) {
-        setLogs(savedHistory.logs);
-        setDisplayedLogs(savedHistory.logs.slice(0, logsToShow));
-        setHasMoreLogs(savedHistory.logs.length > logsToShow);
+        
+        console.log('History: Final logs data:', logsData);
+        console.log('History: Logs data length:', logsData.length);
+        setLogs(logsData);
+        setDisplayedLogs(logsData.slice(0, logsToShow));
+        setHasMoreLogs(logsData.length > logsToShow);
+        // Update the history cache
+        const newLogsHash = createLogsHash(logsData);
+        await saveHistoryToFirebase(logsData, newLogsHash);
+        setLoading(false);
+      } catch (err) {
+        // If live fetch fails, fallback to cache
+        const savedHistory = await loadHistoryFromFirebase();
+        if (savedHistory) {
+          setLogs(savedHistory.logs);
+          setDisplayedLogs(savedHistory.logs.slice(0, logsToShow));
+          setHasMoreLogs(savedHistory.logs.length > logsToShow);
+        }
+        setLoading(false);
       }
-      setLoading(false);
-    }
-  };
+    };
 
   // Fetch safe food logs
   const fetchSafeFoodLogs = async () => {
@@ -474,184 +474,184 @@ const History: React.FC = () => {
             </div>
           ) : activeTab === 'allergy' ? (
             logs.length === 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 60 }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #e0e7ef 0%, #bae6fd 100%)',
-                  borderRadius: '50%',
-                  width: 70,
-                  height: 70,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 12px rgba(56,189,248,0.10)',
-                  marginBottom: 18
-                }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 60 }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #e0e7ef 0%, #bae6fd 100%)',
+                borderRadius: '50%',
+                width: 70,
+                height: 70,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 12px rgba(56,189,248,0.10)',
+                marginBottom: 18
+              }}>
                   <ClipboardList size={38} color="#38bdf8" />
-                </div>
-                <h3 style={{ color: '#64748b', fontWeight: 600, fontSize: 22, marginBottom: 8 }}>No allergy logs found</h3>
-                <p style={{ color: '#94a3b8', fontSize: 16 }}>You haven't submitted any allergy logs yet.</p>
               </div>
-            ) : (
-              <div style={{ width: '100%', maxWidth: 820, display: 'flex', flexDirection: 'column', gap: 48, alignItems: 'center' }}>
-                {displayedLogs.map((log, idx) => {
-                  const isExpanded = expandedCards.has(idx);
-                  const isDeleting = deletingLogs.has(log.docId || '');
-                  return (
-                  <div key={idx} style={{ 
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #f0f9ff 100%)', 
-                    borderRadius: 24, 
-                    boxShadow: '0 20px 60px rgba(14, 165, 233, 0.15), 0 8px 32px rgba(0, 0, 0, 0.08)', 
-                    border: '2px solid rgba(56, 189, 248, 0.2)', 
-                    padding: '2.5rem 2rem', 
-                    width: '100%', 
-                    maxWidth: 750, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    position: 'relative',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s ease',
-                    opacity: isDeleting ? 0.6 : 1,
-                    transform: isDeleting ? 'scale(0.98)' : 'scale(1)',
-                    pointerEvents: isDeleting ? 'none' : 'auto'
+                <h3 style={{ color: '#64748b', fontWeight: 600, fontSize: 22, marginBottom: 8 }}>No allergy logs found</h3>
+              <p style={{ color: '#94a3b8', fontSize: 16 }}>You haven't submitted any allergy logs yet.</p>
+            </div>
+          ) : (
+            <div style={{ width: '100%', maxWidth: 820, display: 'flex', flexDirection: 'column', gap: 48, alignItems: 'center' }}>
+              {displayedLogs.map((log, idx) => {
+                const isExpanded = expandedCards.has(idx);
+                const isDeleting = deletingLogs.has(log.docId || '');
+                return (
+                <div key={idx} style={{ 
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #f0f9ff 100%)', 
+                  borderRadius: 24, 
+                  boxShadow: '0 20px 60px rgba(14, 165, 233, 0.15), 0 8px 32px rgba(0, 0, 0, 0.08)', 
+                  border: '2px solid rgba(56, 189, 248, 0.2)', 
+                  padding: '2.5rem 2rem', 
+                  width: '100%', 
+                  maxWidth: 750, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  position: 'relative',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  opacity: isDeleting ? 0.6 : 1,
+                  transform: isDeleting ? 'scale(0.98)' : 'scale(1)',
+                  pointerEvents: isDeleting ? 'none' : 'auto'
+                }}>
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: 20, 
+                    right: 28, 
+                    opacity: 0.08, 
+                    fontSize: 52,
+                    color: '#0ea5e9'
                   }}>
-                    <div style={{ 
-                      position: 'absolute', 
-                      top: 20, 
-                      right: 28, 
-                      opacity: 0.08, 
-                      fontSize: 52,
-                      color: '#0ea5e9'
-                    }}>
                       <CheckCircle size={24} />
-                    </div>
-                    
-                    {/* Delete Button */}
-                    <div style={{ 
-                      position: 'absolute', 
-                      top: 20, 
-                      left: 28
-                    }}>
-                      <button
-                        onClick={() => log.docId && handleDelete(log.docId)}
-                        disabled={deletingLogs.has(log.docId || '')}
-                        style={{
-                          background: deletingLogs.has(log.docId || '') 
-                            ? 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)'
-                            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: 40,
-                          height: 40,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: deletingLogs.has(log.docId || '') ? 'not-allowed' : 'pointer',
-                          boxShadow: '0 4px 16px rgba(239, 68, 68, 0.25)',
-                          transition: 'all 0.3s ease',
-                          opacity: deletingLogs.has(log.docId || '') ? 0.6 : 1
-                        }}
-                        onMouseOver={(e) => {
-                          if (!deletingLogs.has(log.docId || '')) {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.35)';
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(239, 68, 68, 0.25)';
-                        }}
-                        title="Delete this log"
-                      >
-                        {deletingLogs.has(log.docId || '') ? (
-                          <div style={{
-                            width: 16,
-                            height: 16,
-                            border: '2px solid #fff',
-                            borderTop: '2px solid transparent',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite'
-                          }} />
-                        ) : (
-                          <Trash2 size={20} />
-                        )}
-                      </button>
-                    </div>
-                    
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 14, 
-                      marginBottom: 28,
-                      background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-                      padding: '12px 24px',
-                      borderRadius: 50,
-                      boxShadow: '0 8px 24px rgba(14, 165, 233, 0.25)'
-                    }}>
-                      <BarChart3 size={24} color="#fff" />
-                      <span style={{ fontWeight: 800, color: '#fff', fontSize: 16, letterSpacing: 0.5 }}>Log #{logs.length - idx}</span>
-                    </div>
-                    
-                    {/* Reaction Details Section */}
-                    <div style={{ width: '100%', marginBottom: 32 }}>
-                      <div style={{
-                        background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-                        borderRadius: 16,
-                        padding: '16px 24px',
-                        marginBottom: 24,
-                        boxShadow: '0 8px 24px rgba(14, 165, 233, 0.2)'
-                      }}>
-                        <h3 style={{ fontWeight: 800, color: '#fff', fontSize: 20, textAlign: 'center', margin: 0, letterSpacing: 0.5 }}>🩺 Reaction Details</h3>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+                  </div>
+                  
+                  {/* Delete Button */}
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: 20, 
+                    left: 28
+                  }}>
+                    <button
+                      onClick={() => log.docId && handleDelete(log.docId)}
+                      disabled={deletingLogs.has(log.docId || '')}
+                      style={{
+                        background: deletingLogs.has(log.docId || '') 
+                          ? 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)'
+                          : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 40,
+                        height: 40,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: deletingLogs.has(log.docId || '') ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 4px 16px rgba(239, 68, 68, 0.25)',
+                        transition: 'all 0.3s ease',
+                        opacity: deletingLogs.has(log.docId || '') ? 0.6 : 1
+                      }}
+                      onMouseOver={(e) => {
+                        if (!deletingLogs.has(log.docId || '')) {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.35)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(239, 68, 68, 0.25)';
+                      }}
+                      title="Delete this log"
+                    >
+                      {deletingLogs.has(log.docId || '') ? (
                         <div style={{
+                          width: 16,
+                          height: 16,
+                          border: '2px solid #fff',
+                          borderTop: '2px solid transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                      ) : (
+                          <Trash2 size={20} />
+                      )}
+                    </button>
+                  </div>
+                  
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 14, 
+                    marginBottom: 28,
+                    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                    padding: '12px 24px',
+                    borderRadius: 50,
+                    boxShadow: '0 8px 24px rgba(14, 165, 233, 0.25)'
+                  }}>
+                      <BarChart3 size={24} color="#fff" />
+                    <span style={{ fontWeight: 800, color: '#fff', fontSize: 16, letterSpacing: 0.5 }}>Log #{logs.length - idx}</span>
+                  </div>
+                  
+                  {/* Reaction Details Section */}
+                  <div style={{ width: '100%', marginBottom: 32 }}>
+                    <div style={{
+                      background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                      borderRadius: 16,
+                      padding: '16px 24px',
+                      marginBottom: 24,
+                      boxShadow: '0 8px 24px rgba(14, 165, 233, 0.2)'
+                    }}>
+                        <h3 style={{ fontWeight: 800, color: '#fff', fontSize: 20, textAlign: 'center', margin: 0, letterSpacing: 0.5 }}>🩺 Reaction Details</h3>
+                    </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+                      <div style={{
                           background: 'linear-gradient(135deg, #fff 0%, #f0fdf4 100%)',
-                          borderRadius: 16,
-                          padding: '20px 24px',
+                        borderRadius: 16,
+                        padding: '20px 24px',
                           border: '1px solid rgba(16, 185, 129, 0.15)',
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
-                        }}>
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                      }}>
                           <label style={{ fontWeight: 700, color: '#334155', fontSize: 14, letterSpacing: 0.2, marginBottom: 8, display: 'block' }}>Time of Reaction</label>
                           <p style={{ color: '#1e293b', margin: 0, fontSize: 16, fontWeight: 600 }}>{new Date(log.time).toLocaleString()}</p>
-                        </div>
-                        <div style={{
+                      </div>
+                      <div style={{
                           background: 'linear-gradient(135deg, #fff 0%, #fef3c7 100%)',
-                          borderRadius: 16,
-                          padding: '20px 24px',
+                        borderRadius: 16,
+                        padding: '20px 24px',
                           border: '1px solid rgba(245, 158, 11, 0.15)',
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
-                        }}>
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                      }}>
                           <label style={{ fontWeight: 700, color: '#334155', fontSize: 14, letterSpacing: 0.2, marginBottom: 8, display: 'block' }}>Severity Level</label>
                           <p style={{ color: '#1e293b', margin: 0, fontSize: 16, fontWeight: 600 }}>{log.severity}/10</p>
-                        </div>
-                        <div style={{
+                          </div>
+                      <div style={{
                           background: 'linear-gradient(135deg, #fff 0%, #fef3c7 100%)',
-                          borderRadius: 16,
-                          padding: '20px 24px',
+                        borderRadius: 16,
+                        padding: '20px 24px',
                           border: '1px solid rgba(245, 158, 11, 0.15)',
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
-                        }}>
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                      }}>
                           <label style={{ fontWeight: 700, color: '#334155', fontSize: 14, letterSpacing: 0.2, marginBottom: 8, display: 'block' }}>Symptoms</label>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                            {log.symptoms.map((symptom, sidx) => (
+                          {log.symptoms.map((symptom, sidx) => (
                               <span key={sidx} style={{ 
                                 background: 'linear-gradient(90deg,#f59e0b 0%,#d97706 100%)', 
-                                color: '#fff', 
+                              color: '#fff',
                                 padding: '4px 12px', 
-                                borderRadius: 12, 
+                              borderRadius: 12,
                                 fontSize: 12, 
-                                fontWeight: 600, 
+                              fontWeight: 600,
                                 boxShadow: '0 2px 8px rgba(245, 158, 11, 0.10)' 
-                              }}>
-                                {symptom}
+                            }}>
+                              {symptom}
                               </span>
-                            ))}
+                          ))}
                           </div>
                         </div>
+                        </div>
                       </div>
-                    </div>
-                    
+                      
                     {/* Symptom Description Section - Only show when expanded */}
                     {isExpanded && log.symptomDesc && (
                       <div style={{ width: '100%', marginBottom: 32 }}>
@@ -673,8 +673,8 @@ const History: React.FC = () => {
                         }}>
                           <p style={{ color: '#1e293b', fontSize: 15, margin: 0, lineHeight: 1.6 }}>{log.symptomDesc}</p>
                         </div>
-                      </div>
-                    )}
+                        </div>
+                      )}
                     
                     {/* AI Analysis Section - Only show when expanded */}
                     {isExpanded && log.aiAnalysis && (
@@ -687,7 +687,7 @@ const History: React.FC = () => {
                           boxShadow: '0 8px 24px rgba(139, 92, 246, 0.2)'
                         }}>
                           <h3 style={{ fontWeight: 800, color: '#fff', fontSize: 20, textAlign: 'center', margin: 0, letterSpacing: 0.5 }}>🤖 AI Analysis</h3>
-                        </div>
+                    </div>
                         <div style={{
                           background: 'linear-gradient(135deg, #fff 0%, #f3f4f6 100%)',
                           borderRadius: 16,
@@ -696,179 +696,179 @@ const History: React.FC = () => {
                           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
                         }}>
                           <p style={{ color: '#1e293b', fontSize: 15, margin: 0, lineHeight: 1.6 }}>{log.aiAnalysis}</p>
-                        </div>
+                  </div>
                       </div>
                     )}
-                    
-                    {/* Environmental Cause Section - Only show when expanded */}
-                    {isExpanded && log.environmentalCause && (
-                      <div style={{ width: '100%', marginBottom: 32 }}>
-                        <div style={{
-                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                          borderRadius: 16,
-                          padding: '16px 24px',
-                          marginBottom: 24,
-                          boxShadow: '0 8px 24px rgba(16, 185, 129, 0.2)'
-                        }}>
-                          <h3 style={{ fontWeight: 800, color: '#fff', fontSize: 20, textAlign: 'center', margin: 0, letterSpacing: 0.5 }}>Environmental Cause</h3>
-                        </div>
-                        <div style={{
-                          background: 'linear-gradient(135deg, #fff 0%, #f0fdf4 100%)',
-                          borderRadius: 16,
-                          padding: '20px 24px',
-                          border: '1px solid rgba(16, 185, 129, 0.15)',
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
-                        }}>
-                          <p style={{ color: '#1e293b', fontSize: 15, margin: 0, lineHeight: 1.6 }}>{log.environmentalCause}</p>
-                        </div>
+                  
+                  {/* Environmental Cause Section - Only show when expanded */}
+                  {isExpanded && log.environmentalCause && (
+                    <div style={{ width: '100%', marginBottom: 32 }}>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        borderRadius: 16,
+                        padding: '16px 24px',
+                        marginBottom: 24,
+                        boxShadow: '0 8px 24px rgba(16, 185, 129, 0.2)'
+                      }}>
+                        <h3 style={{ fontWeight: 800, color: '#fff', fontSize: 20, textAlign: 'center', margin: 0, letterSpacing: 0.5 }}>Environmental Cause</h3>
                       </div>
-                    )}
-                    
-                    {/* Exposure Information Section - Only show when expanded */}
-                    {isExpanded && (
-                      <div style={{ width: '100%' }}>
-                        <div style={{
-                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                          borderRadius: 16,
-                          padding: '16px 24px',
-                          marginBottom: 24,
-                          boxShadow: '0 8px 24px rgba(245, 158, 11, 0.2)'
-                        }}>
-                          <h3 style={{ fontWeight: 800, color: '#fff', fontSize: 20, textAlign: 'center', margin: 0, letterSpacing: 0.5 }}>🍽️ Exposure Information</h3>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                          {log.products.map((product, pidx) => (
-                            <div key={pidx} style={{ 
-                              background: 'linear-gradient(135deg, #fff 0%, #fef3c7 50%, #fefce8 100%)', 
-                              borderRadius: 20, 
-                              padding: '24px 28px', 
-                              border: '2px solid rgba(245, 158, 11, 0.2)', 
-                              boxShadow: '0 12px 32px rgba(245, 158, 11, 0.15), 0 4px 16px rgba(0, 0, 0, 0.05)', 
-                              display: 'flex', 
-                              flexDirection: 'column', 
-                              alignItems: 'center', 
-                              gap: 16,
-                              textAlign: 'center'
+                      <div style={{
+                        background: 'linear-gradient(135deg, #fff 0%, #f0fdf4 100%)',
+                        borderRadius: 16,
+                        padding: '20px 24px',
+                        border: '1px solid rgba(16, 185, 129, 0.15)',
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)'
+                      }}>
+                        <p style={{ color: '#1e293b', fontSize: 15, margin: 0, lineHeight: 1.6 }}>{log.environmentalCause}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Exposure Information Section - Only show when expanded */}
+                  {isExpanded && (
+                    <div style={{ width: '100%' }}>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        borderRadius: 16,
+                        padding: '16px 24px',
+                        marginBottom: 24,
+                        boxShadow: '0 8px 24px rgba(245, 158, 11, 0.2)'
+                      }}>
+                        <h3 style={{ fontWeight: 800, color: '#fff', fontSize: 20, textAlign: 'center', margin: 0, letterSpacing: 0.5 }}>🍽️ Exposure Information</h3>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        {log.products.map((product, pidx) => (
+                          <div key={pidx} style={{ 
+                            background: 'linear-gradient(135deg, #fff 0%, #fef3c7 50%, #fefce8 100%)', 
+                            borderRadius: 20, 
+                            padding: '24px 28px', 
+                            border: '2px solid rgba(245, 158, 11, 0.2)', 
+                            boxShadow: '0 12px 32px rgba(245, 158, 11, 0.15), 0 4px 16px rgba(0, 0, 0, 0.05)', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            gap: 16,
+                            textAlign: 'center'
+                          }}>
+                            <div style={{ 
+                              fontWeight: 800, 
+                              fontSize: 18,
+                              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                              color: '#fff',
+                              padding: '8px 20px',
+                              borderRadius: 50,
+                              boxShadow: '0 4px 16px rgba(245, 158, 11, 0.3)'
                             }}>
-                              <div style={{ 
-                                fontWeight: 800, 
-                                fontSize: 18,
-                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                                color: '#fff',
-                                padding: '8px 20px',
-                                borderRadius: 50,
-                                boxShadow: '0 4px 16px rgba(245, 158, 11, 0.3)'
-                              }}>
-                                {product.name || `Product ${pidx + 1}`}
-                              </div>
-                              
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-                                {product.exposureType && (
-                                  <div style={{ 
-                                    color: '#92400e', 
-                                    fontSize: 14, 
-                                    fontWeight: 600,
-                                    background: 'rgba(245, 158, 11, 0.1)',
-                                    padding: '4px 12px',
-                                    borderRadius: 8
-                                  }}>
-                                    Type: {product.exposureType}
-                                  </div>
-                                )}
-                                {product.barcode && (
-                                  <div style={{ 
-                                    color: '#92400e', 
-                                    fontSize: 14, 
-                                    fontWeight: 600,
-                                    background: 'rgba(245, 158, 11, 0.1)',
-                                    padding: '4px 12px',
-                                    borderRadius: 8
-                                  }}>
-                                    Barcode: {product.barcode}
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {product.commonList.length > 0 && (
-                                <div style={{ width: '100%', textAlign: 'center' }}>
-                                  <label style={{ 
-                                    fontWeight: 700, 
-                                    color: '#d97706', 
-                                    fontSize: 14, 
-                                    textTransform: 'uppercase',
-                                    letterSpacing: 0.5,
-                                    marginBottom: 12, 
-                                    display: 'block' 
-                                  }}>
-                                    Ingredients
-                                  </label>
-                                  <div style={{ 
-                                    display: 'flex', 
-                                    flexDirection: 'column', 
-                                    gap: 6,
-                                    alignItems: 'center'
-                                  }}>
-                                    {product.commonList.map((ingredient, iidx) => (
-                                      <span key={iidx} style={{ 
-                                        color: '#92400e', 
-                                        fontSize: 14,
-                                        fontWeight: 500,
-                                        background: 'rgba(245, 158, 11, 0.1)',
-                                        padding: '6px 16px',
-                                        borderRadius: 12,
-                                        border: '1px solid rgba(245, 158, 11, 0.2)'
-                                      }}>
-                                        {ingredient}
-                                      </span>
-                                    ))}
-                                  </div>
+                              {product.name || `Product ${pidx + 1}`}
+                            </div>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                              {product.exposureType && (
+                                <div style={{ 
+                                  color: '#92400e', 
+                                  fontSize: 14, 
+                                  fontWeight: 600,
+                                  background: 'rgba(245, 158, 11, 0.1)',
+                                  padding: '4px 12px',
+                                  borderRadius: 8
+                                }}>
+                                  Type: {product.exposureType}
+                                </div>
+                              )}
+                              {product.barcode && (
+                                <div style={{ 
+                                  color: '#92400e', 
+                                  fontSize: 14, 
+                                  fontWeight: 600,
+                                  background: 'rgba(245, 158, 11, 0.1)',
+                                  padding: '4px 12px',
+                                  borderRadius: 8
+                                }}>
+                                  Barcode: {product.barcode}
                                 </div>
                               )}
                             </div>
-                          ))}
-                        </div>
+                            
+                            {product.commonList.length > 0 && (
+                              <div style={{ width: '100%', textAlign: 'center' }}>
+                                <label style={{ 
+                                  fontWeight: 700, 
+                                  color: '#d97706', 
+                                  fontSize: 14, 
+                                  textTransform: 'uppercase',
+                                  letterSpacing: 0.5,
+                                  marginBottom: 12, 
+                                  display: 'block' 
+                                }}>
+                                  Ingredients
+                                </label>
+                                <div style={{ 
+                                  display: 'flex', 
+                                  flexDirection: 'column', 
+                                  gap: 6,
+                                  alignItems: 'center'
+                                }}>
+                                  {product.commonList.map((ingredient, iidx) => (
+                                    <span key={iidx} style={{ 
+                                      color: '#92400e', 
+                                      fontSize: 14,
+                                      fontWeight: 500,
+                                      background: 'rgba(245, 158, 11, 0.1)',
+                                      padding: '6px 16px',
+                                      borderRadius: 12,
+                                      border: '1px solid rgba(245, 158, 11, 0.2)'
+                                    }}>
+                                      {ingredient}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )}
-                    
-                    {/* Show More/Less Button */}
-                    <div style={{ marginTop: 24, width: '100%', display: 'flex', justifyContent: 'center' }}>
-                      <button 
-                        onClick={() => toggleCardExpansion(idx)}
-                        style={{
-                          background: isExpanded 
-                            ? 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
-                            : 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-                          color: '#fff',
-                          padding: '12px 24px',
-                          borderRadius: 50,
-                          fontWeight: 600,
-                          fontSize: 14,
-                          border: 'none',
-                          cursor: 'pointer',
-                          boxShadow: isExpanded 
-                            ? '0 4px 16px rgba(100, 116, 139, 0.25)'
-                            : '0 4px 16px rgba(14, 165, 233, 0.25)',
-                          transition: 'all 0.3s ease',
-                          letterSpacing: 0.5
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow = isExpanded 
-                            ? '0 8px 24px rgba(100, 116, 139, 0.35)'
-                            : '0 8px 24px rgba(14, 165, 233, 0.35)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = isExpanded 
-                            ? '0 4px 16px rgba(100, 116, 139, 0.25)'
-                            : '0 4px 16px rgba(14, 165, 233, 0.25)';
-                        }}
-                      >
-                        {isExpanded ? 'Show Less' : 'Show More'}
-                      </button>
                     </div>
+                  )}
+                  
+                  {/* Show More/Less Button */}
+                  <div style={{ marginTop: 24, width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <button 
+                      onClick={() => toggleCardExpansion(idx)}
+                      style={{
+                        background: isExpanded 
+                          ? 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
+                          : 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                        color: '#fff',
+                        padding: '12px 24px',
+                        borderRadius: 50,
+                        fontWeight: 600,
+                        fontSize: 14,
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: isExpanded 
+                          ? '0 4px 16px rgba(100, 116, 139, 0.25)'
+                          : '0 4px 16px rgba(14, 165, 233, 0.25)',
+                        transition: 'all 0.3s ease',
+                        letterSpacing: 0.5
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = isExpanded 
+                          ? '0 8px 24px rgba(100, 116, 139, 0.35)'
+                          : '0 8px 24px rgba(14, 165, 233, 0.35)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = isExpanded 
+                          ? '0 4px 16px rgba(100, 116, 139, 0.25)'
+                          : '0 4px 16px rgba(14, 165, 233, 0.25)';
+                      }}
+                    >
+                      {isExpanded ? 'Show Less' : 'Show More'}
+                    </button>
                   </div>
-                )})}
+                </div>
+              )})}
               </div>
             )
           ) : activeTab === 'safe-food' ? (
@@ -1006,8 +1006,8 @@ const History: React.FC = () => {
                                   borderRadius: 8
                                 }}>
                                   Type: {product.exposureType}
-                                </div>
-                              )}
+            </div>
+          )}
                               {product.barcode && (
                                 <div style={{ 
                                   color: '#16a34a', 

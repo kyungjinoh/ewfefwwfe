@@ -455,10 +455,10 @@ const Analysis: React.FC = () => {
     try {
       const riskLevel = await GroqService.analyzeRiskLevel(ingredient);
       
-      setRiskLevels(prev => ({ ...prev, [ingredient]: riskLevel }));
-      // Save to Firebase
-      const updatedLevels = { ...riskLevels, [ingredient]: riskLevel };
-      saveRiskLevels(updatedLevels);
+        setRiskLevels(prev => ({ ...prev, [ingredient]: riskLevel }));
+        // Save to Firebase
+        const updatedLevels = { ...riskLevels, [ingredient]: riskLevel };
+        saveRiskLevels(updatedLevels);
       
     } catch (error) {
       console.error(`Error analyzing risk level for ${ingredient}:`, error);
@@ -491,8 +491,8 @@ const Analysis: React.FC = () => {
         setOverallSummary(summary);
         // Save successful results to Firebase
         saveOverallSummary(summary);
-      } else {
-        throw new Error('Failed to generate summary - empty response');
+          } else {
+            throw new Error('Failed to generate summary - empty response');
       }
       
     } catch (error) {
@@ -567,7 +567,7 @@ const Analysis: React.FC = () => {
       saveOverallSummary(errorMessage);
     } finally {
       setSummaryLoading(false);
-    }
+      }
   }, [localAllergens, logs, saveOverallSummary]);
 
   // Regenerate test kit suggestions
@@ -584,8 +584,8 @@ const Analysis: React.FC = () => {
         setTestKitSuggestions(suggestions);
         // Save successful results to Firebase
         saveTestKitSuggestions(suggestions);
-      } else {
-        throw new Error('Failed to generate test kit suggestions - empty response');
+          } else {
+            throw new Error('Failed to generate test kit suggestions - empty response');
       }
       
     } catch (error) {
@@ -731,7 +731,7 @@ const Analysis: React.FC = () => {
   // Run analysis automatically when logs change and are non-empty
   useEffect(() => {
     if (user) {
-      fetchLogs();
+        fetchLogs();
       fetchSafeFoodLogs();
       loadAiAnalysisResults();
       loadExistingAnalysis();
@@ -903,29 +903,29 @@ const Analysis: React.FC = () => {
           {/* Ingredients Section */}
           {activeSection === 'ingredients' && (
             <div>
-              {/* Overall AI Summary */}
-              {localAllergens.length > 0 && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                  borderRadius: 16,
-                  padding: 24,
-                  marginBottom: 32,
-                  border: '1px solid #0ea5e9',
-                  position: 'relative'
-                }}>
-                  <h3 style={{ 
-                    color: '#0c4a6e', 
-                    fontWeight: 700, 
-                    fontSize: 20, 
-                    marginBottom: 16,
-                    display: 'flex',
-                    alignItems: 'center',
+          {/* Overall AI Summary */}
+          {localAllergens.length > 0 && (
+            <div style={{
+              background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+              borderRadius: 16,
+              padding: 24,
+              marginBottom: 32,
+              border: '1px solid #0ea5e9',
+              position: 'relative'
+            }}>
+              <h3 style={{ 
+                color: '#0c4a6e', 
+                fontWeight: 700, 
+                fontSize: 20, 
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
                     gap: 8,
                     justifyContent: 'space-between'
-                  }}>
+              }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <BarChart3 size={24} />
-                      Overall AI Summary
+                Overall AI Summary
                     </div>
                     {!summaryLoading && overallSummary && (
                       <button
@@ -958,339 +958,339 @@ const Analysis: React.FC = () => {
                         Regenerate
                       </button>
                     )}
-                  </h3>
-                  
-                  {summaryLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#64748b' }}>
-                      <div style={{
-                        width: 16,
-                        height: 16,
-                        border: '2px solid #0ea5e9',
-                        borderTop: '2px solid transparent',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                      }} />
-                      <span style={{ fontSize: 16 }}>Generating summary...</span>
-                    </div>
-                  ) : (
-                    <p style={{ 
-                      color: '#0369a1', 
-                      fontSize: 16, 
-                      lineHeight: 1.6,
-                      margin: 0
-                    }}>
-                      {overallSummary}
-                    </p>
-                  )}
+              </h3>
+              
+              {summaryLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#64748b' }}>
+                  <div style={{
+                    width: 16,
+                    height: 16,
+                    border: '2px solid #0ea5e9',
+                    borderTop: '2px solid transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                  <span style={{ fontSize: 16 }}>Generating summary...</span>
                 </div>
+              ) : (
+                <p style={{ 
+                  color: '#0369a1', 
+                  fontSize: 16, 
+                  lineHeight: 1.6,
+                  margin: 0
+                }}>
+                  {overallSummary}
+                </p>
               )}
+            </div>
+          )}
 
-              {/* Most Likely Allergens (local analysis) */}
-              {localAllergens.length > 0 && (
-                <>
-                  <h2 style={{ color: '#1e293b', fontWeight: 700, fontSize: 24, marginBottom: 24 }}>
-                    Most Likely Allergens
-                  </h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {localAllergens.slice(0, 10).map((allergen, idx) => (
-                      <div key={allergen.ingredient} style={{
-                        background: '#f8fafc',
-                        borderRadius: 16,
-                        padding: 24,
-                        border: '2px solid #bae6fd',
-                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-                        position: 'relative'
-                      }}>
-                        {/* Risk Level Badge - Upper Right Corner */}
-                        {riskLevels[allergen.ingredient] && (
-                          <div style={{
-                            position: 'absolute',
-                            top: 16,
-                            right: 16,
-                            background: getRiskLevelBackground(riskLevels[allergen.ingredient]),
-                            color: getRiskLevelColor(riskLevels[allergen.ingredient]),
-                            padding: '6px 12px',
-                            borderRadius: 20,
-                            fontSize: 12,
-                            fontWeight: 700,
+          {/* Most Likely Allergens (local analysis) */}
+          {localAllergens.length > 0 && (
+            <>
+              <h2 style={{ color: '#1e293b', fontWeight: 700, fontSize: 24, marginBottom: 24 }}>
+                Most Likely Allergens
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {localAllergens.slice(0, 10).map((allergen, idx) => (
+                  <div key={allergen.ingredient} style={{
+                    background: '#f8fafc',
+                    borderRadius: 16,
+                    padding: 24,
+                    border: '2px solid #bae6fd',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                    position: 'relative'
+                  }}>
+                    {/* Risk Level Badge - Upper Right Corner */}
+                    {riskLevels[allergen.ingredient] && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        background: getRiskLevelBackground(riskLevels[allergen.ingredient]),
+                        color: getRiskLevelColor(riskLevels[allergen.ingredient]),
+                        padding: '6px 12px',
+                        borderRadius: 20,
+                        fontSize: 12,
+                        fontWeight: 700,
                             border: `2px solid ${getRiskLevelColor(riskLevels[allergen.ingredient]) + '20'}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6
-                          }}>
-                            <div style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              background: getRiskLevelColor(riskLevels[allergen.ingredient])
-                            }} />
-                            {getRiskLevelText(riskLevels[allergen.ingredient])}
-                          </div>
-                        )}
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
-                          <div style={{
-                            background: '#38bdf8',
-                            color: '#fff',
-                            borderRadius: '50%',
-                            width: 40,
-                            height: 40,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: 18
-                          }}>{idx + 1}</div>
-                          <h3 style={{ color: '#0ea5e9', fontWeight: 700, fontSize: 20, margin: 0 }}>
-                            {allergen.ingredient.charAt(0).toUpperCase() + allergen.ingredient.slice(1)}
-                          </h3>
-                        </div>
-                        <div style={{ display: 'flex', gap: 24, fontSize: 15, marginBottom: 8 }}>
-                          <span style={{ color: '#0ea5e9', fontWeight: 600 }}>Frequency: {allergen.frequency}</span>
-                          <span style={{ color: '#f59e42', fontWeight: 600 }}>Avg Severity: {allergen.averageSeverity.toFixed(1)}</span>
-                        </div>
-                        <div style={{ color: '#64748b', fontSize: 14, marginBottom: 8 }}>
-                          Symptoms: {allergen.symptoms.length > 0 ? allergen.symptoms.join(', ') : 'None'}
-                        </div>
-                        {allergen.environmentalNotes.length > 0 && (
-                          <div style={{ color: '#64748b', fontSize: 14, marginBottom: 8 }}>
-                            Environmental: {allergen.environmentalNotes.join(', ')}
-                          </div>
-                        )}
-                        
-                        {/* AI Analysis Section */}
-                        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
-                          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                            {!revealedMedicalAnalysis.has(allergen.ingredient) && (
-                              <button
-                                onClick={async () => {
-                                  // Always call the API when button is pressed
-                                  await analyzeIngredient(allergen.ingredient, allergen);
-                                  setRevealedMedicalAnalysis(prev => new Set(prev).add(allergen.ingredient));
-                                }}
-                                style={{
-                                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                                  color: '#fff',
-                                  border: 'none',
-                                  borderRadius: 8,
-                                  padding: '8px 16px',
-                                  fontSize: 14,
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 8,
-                                  marginTop: 8
-                                }}
-                              >
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}>
+                        <div style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: getRiskLevelColor(riskLevels[allergen.ingredient])
+                        }} />
+                        {getRiskLevelText(riskLevels[allergen.ingredient])}
+                      </div>
+                    )}
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+                      <div style={{
+                        background: '#38bdf8',
+                        color: '#fff',
+                        borderRadius: '50%',
+                        width: 40,
+                        height: 40,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontSize: 18
+                      }}>{idx + 1}</div>
+                      <h3 style={{ color: '#0ea5e9', fontWeight: 700, fontSize: 20, margin: 0 }}>
+                        {allergen.ingredient.charAt(0).toUpperCase() + allergen.ingredient.slice(1)}
+                      </h3>
+                    </div>
+                    <div style={{ display: 'flex', gap: 24, fontSize: 15, marginBottom: 8 }}>
+                      <span style={{ color: '#0ea5e9', fontWeight: 600 }}>Frequency: {allergen.frequency}</span>
+                      <span style={{ color: '#f59e42', fontWeight: 600 }}>Avg Severity: {allergen.averageSeverity.toFixed(1)}</span>
+                    </div>
+                    <div style={{ color: '#64748b', fontSize: 14, marginBottom: 8 }}>
+                      Symptoms: {allergen.symptoms.length > 0 ? allergen.symptoms.join(', ') : 'None'}
+                    </div>
+                    {allergen.environmentalNotes.length > 0 && (
+                      <div style={{ color: '#64748b', fontSize: 14, marginBottom: 8 }}>
+                        Environmental: {allergen.environmentalNotes.join(', ')}
+                      </div>
+                    )}
+                    
+                    {/* AI Analysis Section */}
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                        {!revealedMedicalAnalysis.has(allergen.ingredient) && (
+            <button
+                            onClick={async () => {
+                              // Always call the API when button is pressed
+                              await analyzeIngredient(allergen.ingredient, allergen);
+                              setRevealedMedicalAnalysis(prev => new Set(prev).add(allergen.ingredient));
+                            }}
+              style={{
+                              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                              color: '#fff',
+                border: 'none',
+                              borderRadius: 8,
+                              padding: '8px 16px',
+                              fontSize: 14,
+                              fontWeight: 600,
+                cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              marginTop: 8
+                            }}
+                          >
                                 <FlaskConical size={16} />
-                                Medical Analysis
-                              </button>
-                            )}
-                            
-                            {!riskLevels[allergen.ingredient] && !riskLoadingStates[allergen.ingredient] && (
-                              <button
-                                onClick={() => analyzeRiskLevel(allergen.ingredient, allergen)}
-                                style={{
-                                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                                  color: '#fff',
-                                  border: 'none',
-                                  borderRadius: 8,
-                                  padding: '8px 16px',
-                                  fontSize: 14,
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 8
-                                }}
-                              >
+                            Medical Analysis
+            </button>
+                        )}
+                        
+                        {!riskLevels[allergen.ingredient] && !riskLoadingStates[allergen.ingredient] && (
+            <button
+                            onClick={() => analyzeRiskLevel(allergen.ingredient, allergen)}
+              style={{
+                              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                              color: '#fff',
+                border: 'none',
+                              borderRadius: 8,
+                              padding: '8px 16px',
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8
+                            }}
+                          >
                                 <BarChart3 size={16} />
-                                Analyze Risk Level
-                              </button>
-                            )}
-                          </div>
-                          
-                          {(aiLoadingStates[allergen.ingredient] || riskLoadingStates[allergen.ingredient]) && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#64748b' }}>
-                              <div style={{
-                                width: 16,
-                                height: 16,
-                                border: '2px solid #8b5cf6',
-                                borderTop: '2px solid transparent',
-                                borderRadius: '50%',
-                                animation: 'spin 1s linear infinite'
-                              }} />
-                              <span style={{ fontSize: 14 }}>
-                                {aiLoadingStates[allergen.ingredient] ? 'AI analyzing...' : 'Risk analyzing...'}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {revealedMedicalAnalysis.has(allergen.ingredient) && aiAnalysisResults[allergen.ingredient] && (
-                            <div style={{ 
-                              background: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze') 
-                                ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
-                                : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                              borderRadius: 12,
-                              padding: 16,
-                              border: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze')
-                                ? '1px solid #fecaca'
-                                : '1px solid #0ea5e9'
-                            }}>
-                              <h4 style={{ 
-                                color: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze')
-                                  ? '#dc2626'
-                                  : '#0c4a6e', 
-                                fontWeight: 600, 
-                                fontSize: 16,
-                                marginBottom: 12,
+                            Analyze Risk Level
+                          </button>
+                        )}
+                      </div>
+                      
+                      {(aiLoadingStates[allergen.ingredient] || riskLoadingStates[allergen.ingredient]) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#64748b' }}>
+                          <div style={{
+                            width: 16,
+                            height: 16,
+                            border: '2px solid #8b5cf6',
+                            borderTop: '2px solid transparent',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite'
+                          }} />
+                          <span style={{ fontSize: 14 }}>
+                            {aiLoadingStates[allergen.ingredient] ? 'AI analyzing...' : 'Risk analyzing...'}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {revealedMedicalAnalysis.has(allergen.ingredient) && aiAnalysisResults[allergen.ingredient] && (
+                        <div style={{ 
+                          background: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze') 
+                            ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
+                            : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                borderRadius: 12,
+                          padding: 16,
+                          border: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze')
+                            ? '1px solid #fecaca'
+                            : '1px solid #0ea5e9'
+                        }}>
+                          <h4 style={{ 
+                            color: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze')
+                              ? '#dc2626'
+                              : '#0c4a6e', 
+                            fontWeight: 600, 
+                fontSize: 16,
+                            marginBottom: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8
+                          }}>
+                                <FlaskConical size={20} />
+                            Medical Analysis
+                          </h4>
+                          <p style={{ 
+                            color: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze')
+                              ? '#991b1b'
+                              : '#0369a1', 
+                            fontSize: 14, 
+                            lineHeight: 1.6,
+                            whiteSpace: 'pre-wrap'
+                          }}>
+                            {aiAnalysisResults[allergen.ingredient]}
+                          </p>
+                          {/* Retry button for failed analyses */}
+                          {aiAnalysisResults[allergen.ingredient].includes('Unable to analyze') && (
+                            <button
+                              onClick={async () => {
+                                await analyzeIngredient(allergen.ingredient, allergen);
+                              }}
+                              style={{
+                                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: 8,
+                                padding: '8px 16px',
+                                fontSize: 14,
+                                fontWeight: 600,
+                cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 8
-                              }}>
-                                <FlaskConical size={20} />
-                                Medical Analysis
-                              </h4>
-                              <p style={{ 
-                                color: aiAnalysisResults[allergen.ingredient].includes('Unable to analyze')
-                                  ? '#991b1b'
-                                  : '#0369a1', 
-                                fontSize: 14, 
-                                lineHeight: 1.6,
-                                whiteSpace: 'pre-wrap'
-                              }}>
-                                {aiAnalysisResults[allergen.ingredient]}
-                              </p>
-                              {/* Retry button for failed analyses */}
-                              {aiAnalysisResults[allergen.ingredient].includes('Unable to analyze') && (
-                                <button
-                                  onClick={async () => {
-                                    await analyzeIngredient(allergen.ingredient, allergen);
-                                  }}
-                                  style={{
-                                    background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: 8,
-                                    padding: '8px 16px',
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8,
-                                    marginTop: 12
-                                  }}
-                                >
+                                gap: 8,
+                                marginTop: 12
+                              }}
+                            >
                                   <FlaskConical size={16} />
-                                  Retry Analysis
-                                </button>
-                              )}
-                            </div>
+                              Retry Analysis
+            </button>
                           )}
-                        </div>
-                      </div>
-                    ))}
+          </div>
+                      )}
+                    </div>
                   </div>
-                </>
-              )}
+                ))}
+              </div>
+            </>
+          )}
 
-              {/* Error Display */}
-              {error && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 32,
-                  border: '1px solid #fecaca',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12
-                }}>
+          {/* Error Display */}
+          {error && (
+            <div style={{
+              background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 32,
+              border: '1px solid #fecaca',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12
+            }}>
                   <AlertTriangle size={24} color="#dc2626" />
-                  <div>
-                    <h4 style={{ color: '#dc2626', fontWeight: 600, marginBottom: 4 }}>
-                      Analysis Error
-                    </h4>
-                    <p style={{ color: '#991b1b', fontSize: 14 }}>
-                      {error}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <div>
+                <h4 style={{ color: '#dc2626', fontWeight: 600, marginBottom: 4 }}>
+                  Analysis Error
+                </h4>
+                <p style={{ color: '#991b1b', fontSize: 14 }}>
+                  {error}
+                </p>
+              </div>
+          </div>
+          )}
 
-              {/* Loading State */}
-              {loading && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 60 }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #e0e7ef 0%, #c7d2fe 100%)',
-                    borderRadius: '50%',
-                    width: 80,
-                    height: 80,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 24,
-                    animation: 'pulse 2s infinite'
-                  }}>
+          {/* Loading State */}
+          {loading && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 60 }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #e0e7ef 0%, #c7d2fe 100%)',
+                borderRadius: '50%',
+                width: 80,
+                height: 80,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 24,
+                animation: 'pulse 2s infinite'
+              }}>
                     <FlaskConical size={40} color="#6366f1" />
-                  </div>
-                  <h3 style={{ color: '#64748b', fontWeight: 600, fontSize: 22, marginBottom: 8 }}>
-                    Loading your allergy data...
-                  </h3>
-                </div>
-              )}
+              </div>
+              <h3 style={{ color: '#64748b', fontWeight: 600, fontSize: 22, marginBottom: 8 }}>
+                Loading your allergy data...
+              </h3>
+            </div>
+          )}
 
-              {/* No Logs State */}
-              {!loading && logs.length === 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 60 }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #e0e7ef 0%, #c7d2fe 100%)',
-                    borderRadius: '50%',
-                    width: 80,
-                    height: 80,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 24
-                  }}>
+          {/* No Logs State */}
+          {!loading && logs.length === 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 60 }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #e0e7ef 0%, #c7d2fe 100%)',
+                borderRadius: '50%',
+                width: 80,
+                height: 80,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 24
+              }}>
                     <AlertTriangle size={40} color="#6366f1" />
-                  </div>
-                  <h3 style={{ color: '#64748b', fontWeight: 600, fontSize: 22, marginBottom: 8 }}>
-                    No allergy logs found
-                  </h3>
-                  <p style={{ color: '#94a3b8', fontSize: 16, textAlign: 'center', marginBottom: 32 }}>
-                    You need to submit some allergy logs first to analyze your allergen patterns.
-                  </p>
-                </div>
-              )}
+              </div>
+              <h3 style={{ color: '#64748b', fontWeight: 600, fontSize: 22, marginBottom: 8 }}>
+                No allergy logs found
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: 16, textAlign: 'center', marginBottom: 32 }}>
+                You need to submit some allergy logs first to analyze your allergen patterns.
+              </p>
+            </div>
+                  )}
 
-              {/* Allergen Rankings */}
+          {/* Allergen Rankings */}
 
-              {/* Test Kit Suggestions */}
-              {localAllergens.length > 0 && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-                  borderRadius: 16,
-                  padding: 24,
-                  marginTop: 32,
-                  border: '1px solid #f59e0b',
-                  position: 'relative'
-                }}>
-                  <h3 style={{ 
-                    color: '#92400e', 
-                    fontWeight: 700, 
-                    fontSize: 20, 
-                    marginBottom: 16,
-                    display: 'flex',
-                    alignItems: 'center',
+          {/* Test Kit Suggestions */}
+          {localAllergens.length > 0 && (
+            <div style={{
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                          borderRadius: 16,
+                          padding: 24,
+              marginTop: 32,
+              border: '1px solid #f59e0b',
+              position: 'relative'
+            }}>
+              <h3 style={{ 
+                color: '#92400e', 
+                fontWeight: 700, 
+                fontSize: 20, 
+                marginBottom: 16,
+                          display: 'flex',
+                alignItems: 'center',
                     gap: 8,
                     justifyContent: 'space-between'
-                  }}>
+                        }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <FlaskConical size={24} />
-                      Recommended Test Kits
+                Recommended Test Kits
                     </div>
                     {!testKitLoading && testKitSuggestions && (
                       <button
@@ -1323,97 +1323,97 @@ const Analysis: React.FC = () => {
                         Regenerate
                       </button>
                     )}
-                  </h3>
-                  
-                  {testKitLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#92400e' }}>
-                      <div style={{
-                        width: 16,
-                        height: 16,
-                        border: '2px solid #f59e0b',
-                        borderTop: '2px solid transparent',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                      }} />
-                      <span style={{ fontSize: 16 }}>Generating test kit recommendations...</span>
+              </h3>
+              
+              {testKitLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#92400e' }}>
+                  <div style={{
+                    width: 16,
+                    height: 16,
+                    border: '2px solid #f59e0b',
+                    borderTop: '2px solid transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                  <span style={{ fontSize: 16 }}>Generating test kit recommendations...</span>
+                        </div>
+              ) : (
+                <div>
+                  {testKitSuggestions && testKitSuggestions !== 'Unable to generate test kit recommendations at this time.' ? (
+                    <div style={{ display: 'grid', gap: 16 }}>
+                      {testKitSuggestions.split('\n').filter(line => line.trim() && /^\d+\./.test(line.trim())).map((line, index) => {
+                        const match = line.match(/^\d+\.\s*(.+)/);
+                        if (match) {
+                          const content = match[1];
+                          return (
+                            <div key={index} style={{
+                              background: 'linear-gradient(135deg, #ffffff 0%, #fefce8 100%)',
+                              borderRadius: 12,
+                              padding: 20,
+                              border: '1px solid #fbbf24',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                              position: 'relative',
+                              overflow: 'hidden'
+                            }}>
+                              {/* Number badge */}
+                              <div style={{
+                                position: 'absolute',
+                                top: -8,
+                                left: -8,
+                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                color: '#fff',
+                                width: 32,
+                                height: 32,
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 14,
+                                fontWeight: 700,
+                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                              }}>
+                                {index + 1}
+                    </div>
+                              
+                              {/* Content */}
+                              <div style={{ marginLeft: 20 }}>
+                                <p style={{ 
+                                  color: '#92400e', 
+                                  fontSize: 16, 
+                                  lineHeight: 1.6,
+                                  fontWeight: 500,
+                                  margin: 0
+                                }}>
+                                  {content}
+                                </p>
+                </div>
+                              
+                              {/* Decorative element */}
+                              <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: 60,
+                                height: 60,
+                                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)',
+                                borderRadius: '0 12px 0 60px'
+                              }} />
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
                     </div>
                   ) : (
-                    <div>
-                      {testKitSuggestions && testKitSuggestions !== 'Unable to generate test kit recommendations at this time.' ? (
-                        <div style={{ display: 'grid', gap: 16 }}>
-                          {testKitSuggestions.split('\n').filter(line => line.trim() && /^\d+\./.test(line.trim())).map((line, index) => {
-                            const match = line.match(/^\d+\.\s*(.+)/);
-                            if (match) {
-                              const content = match[1];
-                              return (
-                                <div key={index} style={{
-                                  background: 'linear-gradient(135deg, #ffffff 0%, #fefce8 100%)',
-                                  borderRadius: 12,
-                                  padding: 20,
-                                  border: '1px solid #fbbf24',
-                                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                                  position: 'relative',
-                                  overflow: 'hidden'
-                                }}>
-                                  {/* Number badge */}
-                                  <div style={{
-                                    position: 'absolute',
-                                    top: -8,
-                                    left: -8,
-                                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                                    color: '#fff',
-                                    width: 32,
-                                    height: 32,
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: 14,
-                                    fontWeight: 700,
-                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-                                  }}>
-                                    {index + 1}
-                                  </div>
-                                  
-                                  {/* Content */}
-                                  <div style={{ marginLeft: 20 }}>
-                                    <p style={{ 
-                                      color: '#92400e', 
-                                      fontSize: 16, 
-                                      lineHeight: 1.6,
-                                      fontWeight: 500,
-                                      margin: 0
-                                    }}>
-                                      {content}
-                                    </p>
-                                  </div>
-                                  
-                                  {/* Decorative element */}
-                                  <div style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
-                                    width: 60,
-                                    height: 60,
-                                    background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)',
-                                    borderRadius: '0 12px 0 60px'
-                                  }} />
-                                </div>
-                              );
-                            }
-                            return null;
-                          })}
-                        </div>
-                      ) : (
-                        <div style={{ 
-                          color: '#92400e', 
-                          fontSize: 16, 
-                          lineHeight: 1.6,
-                          whiteSpace: 'pre-wrap'
-                        }}>
-                          {testKitSuggestions}
-                        </div>
-                      )}
+                    <div style={{ 
+                      color: '#92400e', 
+                      fontSize: 16, 
+                      lineHeight: 1.6,
+                      whiteSpace: 'pre-wrap'
+                    }}>
+                      {testKitSuggestions}
+                            </div>
+                          )}
                     </div>
                   )}
                 </div>
@@ -1623,8 +1623,8 @@ const Analysis: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </div>
-          )}
+                </div>
+              )}
         </div>
       </main>
     </div>
