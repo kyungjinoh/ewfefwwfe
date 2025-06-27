@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdEmail, MdLock, MdPerson, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import Header from './Header';
-import Footer from './Footer';
 import './SignUp.css';
 import { auth } from './firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth';
@@ -103,7 +102,8 @@ const SignUp: React.FC = () => {
         <div className="signup-content">
           <div className="signup-card">
             <div className="signup-header">
-              <h1>AllergyReal Clinical</h1>
+              <img src="https://cdn.discordapp.com/attachments/1384526031221817375/1386902983828312214/A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview.png?ex=685c0e4e&is=685abcce&hm=18ec9739025d39dcf0033827fdc2a7664367207be46b432df725f279805e39a9&" alt="AllergyGen AI Logo" style={{height: '2.5rem', width: '2.5rem', objectFit: 'contain', marginBottom: '0.5rem'}} />
+              <h1>AllergyGen AI</h1>
               <p>Create your clinical account</p>
             </div>
             <form className="signup-form" onSubmit={handleSubmit}>
@@ -111,7 +111,7 @@ const SignUp: React.FC = () => {
                 <label htmlFor="name">Full Name</label>
                 <div className="input-container">
                   <div className="input-icon">
-                    <MdPerson />
+                    <User />
                   </div>
                   <input
                     type="text"
@@ -127,7 +127,7 @@ const SignUp: React.FC = () => {
                 <label htmlFor="email">Email Address</label>
                 <div className="input-container">
                   <div className="input-icon">
-                    <MdEmail />
+                    <Mail />
                   </div>
                   <input
                     type="email"
@@ -143,7 +143,7 @@ const SignUp: React.FC = () => {
                 <label htmlFor="password">Password</label>
                 <div className="input-container">
                   <div className="input-icon">
-                    <MdLock />
+                    <Lock />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -159,7 +159,7 @@ const SignUp: React.FC = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+                    {showPassword ? <EyeOff /> : <Eye />}
                   </button>
                 </div>
               </div>
@@ -167,7 +167,7 @@ const SignUp: React.FC = () => {
                 <label htmlFor="confirmPassword">Confirm Password</label>
                 <div className="input-container">
                   <div className="input-icon">
-                    <MdLock />
+                    <Lock />
                   </div>
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -183,7 +183,7 @@ const SignUp: React.FC = () => {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showConfirmPassword ? <MdVisibilityOff /> : <MdVisibility />}
+                    {showConfirmPassword ? <EyeOff /> : <Eye />}
                   </button>
                 </div>
               </div>
@@ -197,9 +197,9 @@ const SignUp: React.FC = () => {
               <span>or</span>
             </div>
             <button type="button" className="google-signup-button" onClick={handleGoogleSignUp} disabled={loading}>
-              <div className="google-icon">
-                <FcGoogle />
-              </div>
+              <span className="google-icon">
+                <FcGoogle size={24} />
+              </span>
               Sign up with Google
             </button>
             <div className="signup-footer">
@@ -209,7 +209,6 @@ const SignUp: React.FC = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 };

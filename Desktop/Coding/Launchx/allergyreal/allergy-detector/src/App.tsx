@@ -8,6 +8,7 @@ import UploadDemo from './UploadDemo';
 import HowItWorks from './HowItWorks';
 import Features from './Features';
 import Testimonials from './Testimonials';
+import PricingPlan from './PricingPlan';
 import Footer from './Footer';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
@@ -15,17 +16,19 @@ import Dashboard from './Dashboard';
 import Profile from './Profile';
 import ScrollToTop from './ScrollToTop';
 import { AuthProvider } from './AuthContext';
+import LogReaction from './LogReaction';
+import Analysis from './Analysis';
+import History from './History';
 
 function MainPage() {
   return (
     <>
-      <Header />
       <HeroSection />
       <UploadDemo />
       <HowItWorks />
       <Features />
+      <PricingPlan />
       <Testimonials />
-      <Footer />
     </>
   );
 }
@@ -35,15 +38,20 @@ function App() {
     <AuthProvider>
       <Router>
         <ScrollToTop />
-        <div className="App">
+    <div className="App">
+          <Header />
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/log-reaction" element={<LogReaction />} />
+            <Route path="/dashboard/analysis" element={<Analysis />} />
+            <Route path="/dashboard/history" element={<History />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
-        </div>
+          <Footer />
+    </div>
       </Router>
     </AuthProvider>
   );

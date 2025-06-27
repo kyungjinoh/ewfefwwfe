@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { MdAssignment } from 'react-icons/md';
+import { ClipboardList } from 'lucide-react';
 import './UploadDemo.css';
 
 const UploadDemo: React.FC = () => {
@@ -32,7 +32,7 @@ const UploadDemo: React.FC = () => {
       <h2 id="upload-title" className="highlight-title">Let's Start</h2>
       <div className="demo-container">
         <div className="upload-area" tabIndex={0} role="button" aria-label="Upload ingredient documentation" onClick={handleButtonClick} onKeyPress={e => { if (e.key === 'Enter') handleButtonClick(); }}>
-          <div className="upload-icon" aria-hidden="true"><MdAssignment size={36} /></div>
+          <div className="upload-icon" aria-hidden="true"><ClipboardList size={36} /></div>
           <div className="upload-title">Upload Documentation</div>
           <div className="upload-desc">Submit ingredient labels for comprehensive allergen assessment</div>
           <button className="upload-btn">Choose File</button>

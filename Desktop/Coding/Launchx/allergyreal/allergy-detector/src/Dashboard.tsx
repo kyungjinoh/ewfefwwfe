@@ -1,14 +1,17 @@
 import React from 'react';
 import { useAuth } from './AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { MdScience, MdUpload, MdHistory, MdSettings } from 'react-icons/md';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { FlaskConical, Upload, History, Settings, ClipboardList, BarChart3 } from 'lucide-react';
 import Header from './Header';
-import Footer from './Footer';
 import './Dashboard.css';
+import DashboardSidebar from './DashboardSidebar';
+
+const LOGO_URL = "https://cdn.discordapp.com/attachments/1384526031221817375/1386902983828312214/A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview.png?ex=685c0e4e&is=685abcce&hm=18ec9739025d39dcf0033827fdc2a7664367207be46b432df725f279805e39a9&";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (!user) {
     navigate('/signin');
@@ -16,80 +19,49 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <>
-      <Header />
-      <div className="dashboard-container">
-        <div className="dashboard-content">
-          <div className="dashboard-header">
-            <h1>Welcome, {user.displayName || 'Clinical User'}!</h1>
-            <p>Access your allergen detection tools and analysis history.</p>
-          </div>
-
-          <div className="dashboard-grid">
-            <div className="dashboard-card">
-              <div className="card-icon">
-                <MdUpload />
-              </div>
-              <h3>Begin Analysis</h3>
-              <p>Upload ingredient labels for allergen detection</p>
-              <button className="card-button" onClick={() => navigate('/#upload')}>
-                Start Analysis
-              </button>
+    <div className="dashboard-layout">
+      <DashboardSidebar />
+      <main className="dashboard-main">
+        <Header />
+        <div className="dashboard-container">
+          <div className="dashboard-content">
+            <div className="dashboard-header">
+              <h1>Welcome, {user.displayName || 'Clinical User'}!</h1>
+              <p>Access your allergen detection tools and analysis history.</p>
             </div>
 
-            <div className="dashboard-card">
-              <div className="card-icon">
-                <MdHistory />
+            <div className="dashboard-grid">
+              <div className="dashboard-card">
+                <div className="card-icon"><ClipboardList /></div>
+                <h3>Log Condition</h3>
+                <p>Log a new allergic condition or symptom event.</p>
+                <button className="card-button" onClick={() => navigate('/dashboard/log-reaction')}>
+                  Go to Log Condition
+                </button>
               </div>
-              <h3>Analysis History</h3>
-              <p>View your previous allergen detection results</p>
-              <button className="card-button secondary">
-                View History
-              </button>
-            </div>
 
-            <div className="dashboard-card">
-              <div className="card-icon">
-                <MdScience />
+              <div className="dashboard-card">
+                <div className="card-icon"><BarChart3 /></div>
+                <h3>Analysis</h3>
+                <p>Access AI-powered allergen analysis and reports.</p>
+                <button className="card-button" onClick={() => navigate('/dashboard/analysis')}>
+                  Go to Analysis
+                </button>
               </div>
-              <h3>Clinical Protocol</h3>
-              <p>Review clinical procedures and guidelines</p>
-              <button className="card-button secondary" onClick={() => navigate('/#how-it-works')}>
-                View Protocol
-              </button>
-            </div>
 
-            <div className="dashboard-card">
-              <div className="card-icon">
-                <MdSettings />
-              </div>
-              <h3>Account Settings</h3>
-              <p>Manage your clinical account preferences</p>
-              <button className="card-button secondary">
-                Settings
-              </button>
-            </div>
-          </div>
-
-          <div className="dashboard-info">
-            <h2>Recent Activity</h2>
-            <div className="activity-list">
-              <div className="activity-item">
-                <div className="activity-icon">
-                  <MdScience />
-                </div>
-                <div className="activity-content">
-                  <h4>Welcome to AllergyReal Clinical</h4>
-                  <p>Your account is ready for allergen detection analysis.</p>
-                  <span className="activity-time">Just now</span>
-                </div>
+              <div className="dashboard-card">
+                <div className="card-icon"><History /></div>
+                <h3>History</h3>
+                <p>View your previous reactions and analysis history.</p>
+                <button className="card-button" onClick={() => navigate('/dashboard/history')}>
+                  Go to History
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <Footer />
-    </>
+      </main>
+    </div>
   );
 };
 

@@ -1,7 +1,7 @@
 .profile-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
-  padding: 20px;
+  padding: 90px 20px 20px 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -239,7 +239,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .profile-container {
-    padding: 15px;
+    padding: 90px;
   }
 
   .profile-header {

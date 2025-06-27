@@ -1,21 +1,21 @@
 import React from 'react';
-import { MdScience, MdDescription } from 'react-icons/md';
-import { GiDna1 } from 'react-icons/gi';
+import { FlaskConical, FileText } from 'lucide-react';
+import { Dna } from 'lucide-react';
 import './Features.css';
 
 const features = [
   {
-    icon: <MdScience size={36} />,
+    icon: <FlaskConical size={36} />,
     title: 'Advanced OCR Technology',
     desc: 'Precision ingredient extraction utilizing state-of-the-art optical character recognition algorithms.'
   },
   {
-    icon: <GiDna1 size={36} />,
+    icon: <Dna size={36} />,
     title: 'AI-Powered Analysis',
     desc: 'Machine learning algorithms identify allergen patterns and cross-reactivity with clinical accuracy.'
   },
   {
-    icon: <MdDescription size={36} />,
+    icon: <FileText size={36} />,
     title: 'Clinical Documentation',
     desc: 'Comprehensive ingredient verification and manual correction capabilities for medical records.'
   }

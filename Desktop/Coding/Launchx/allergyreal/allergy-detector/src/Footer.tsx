@@ -20,7 +20,10 @@ const Footer: React.FC = () => {
     <footer className="footer" aria-label="Footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>AllergyReal Clinical</h3>
+          <div style={{display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem'}}>
+            <img src="https://cdn.discordapp.com/attachments/1384526031221817375/1386902983828312214/A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview.png?ex=685c0e4e&is=685abcce&hm=18ec9739025d39dcf0033827fdc2a7664367207be46b432df725f279805e39a9&" alt="AllerGen AI Logo" style={{height: '2.2rem', width: '2.2rem', objectFit: 'contain', marginRight: '0.3rem'}} />
+            <h3 style={{margin: 0}}>AllerGen AI</h3>
+          </div>
           <p>Advanced AI-powered allergen detection for clinical applications. FDA registered medical device.</p>
         </div>
         
@@ -28,8 +31,8 @@ const Footer: React.FC = () => {
           <h3>Clinical Resources</h3>
           <ul className="footer-links">
             <li><a href="#upload">Begin Analysis</a></li>
-            <li><a href="#about">Clinical Overview</a></li>
-            <li><a href="#features">Analytical Features</a></li>
+            <li><a href="#how-it-works">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
             <li><a href="#testimonials">Clinical Validation</a></li>
           </ul>
           {user ? (

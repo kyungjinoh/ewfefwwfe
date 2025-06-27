@@ -1,21 +1,21 @@
 import React from 'react';
-import { MdAssignment, MdBarChart } from 'react-icons/md';
-import { FaUserMd } from 'react-icons/fa';
+import { ClipboardList, BarChart3 } from 'lucide-react';
+import { UserCheck } from 'lucide-react';
 import './HowItWorks.css';
 
 const steps = [
   {
-    icon: <MdAssignment size={36} />,
+    icon: <ClipboardList size={36} />,
     title: 'Documentation',
     desc: 'Capture ingredient labels through high-resolution imaging for comprehensive analysis.'
   },
   {
-    icon: <FaUserMd size={36} />,
+    icon: <UserCheck size={36} />,
     title: 'Clinical Assessment',
     desc: 'Record adverse reactions and categorize food items based on patient response patterns.'
   },
   {
-    icon: <MdBarChart size={36} />,
+    icon: <BarChart3 size={36} />,
     title: 'Analytical Review',
     desc: 'Generate comprehensive allergen reports with statistical analysis and risk assessment.'
   }

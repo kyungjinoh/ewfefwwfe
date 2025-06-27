@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { MdAccountCircle, MdEmail, MdEdit, MdSave, MdCancel, MdArrowBack } from 'react-icons/md';
+import { User, Mail, Edit, Save, X, ArrowLeft } from 'lucide-react';
 import './Profile.css';
 
 const Profile: React.FC = () => {
@@ -56,7 +56,7 @@ const Profile: React.FC = () => {
     <div className="profile-container">
       <div className="profile-header">
         <button className="back-button" onClick={handleBackToDashboard}>
-          <MdArrowBack />
+          <ArrowLeft />
           Back to Dashboard
         </button>
         <h1>Profile Settings</h1>
@@ -65,7 +65,7 @@ const Profile: React.FC = () => {
       <div className="profile-content">
         <div className="profile-card">
           <div className="profile-avatar">
-            <MdAccountCircle />
+            <User />
           </div>
 
           <div className="profile-info">
@@ -90,7 +90,7 @@ const Profile: React.FC = () => {
             <div className="profile-field">
               <label>Email</label>
               <div className="field-value">
-                <MdEmail />
+                <Mail />
                 <span>{user.email}</span>
               </div>
             </div>
@@ -118,7 +118,7 @@ const Profile: React.FC = () => {
                 </div>
               ) : (
                 <button className="edit-button" onClick={handleEdit}>
-                  <MdEdit />
+                  <Edit />
                   Edit Profile
                 </button>
               )}

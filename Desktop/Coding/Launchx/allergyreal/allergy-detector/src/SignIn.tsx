@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import Header from './Header';
-import Footer from './Footer';
 import './SignIn.css';
 import { auth } from './firebase';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
@@ -103,7 +102,8 @@ const SignIn: React.FC = () => {
         <div className="signin-content">
           <div className="signin-card">
             <div className="signin-header">
-              <h1>AllergyReal Clinical</h1>
+              <img src="https://cdn.discordapp.com/attachments/1384526031221817375/1386902983828312214/A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview.png?ex=685c0e4e&is=685abcce&hm=18ec9739025d39dcf0033827fdc2a7664367207be46b432df725f279805e39a9&" alt="AllergyGen AI Logo" style={{height: '2.5rem', width: '2.5rem', objectFit: 'contain', marginBottom: '0.5rem'}} />
+              <h1>AllergyGen AI</h1>
               <p>Sign in to your clinical account</p>
             </div>
 
@@ -112,7 +112,7 @@ const SignIn: React.FC = () => {
                 <label htmlFor="email">Email Address</label>
                 <div className="input-container">
                   <div className="input-icon">
-                    <MdEmail />
+                    <Mail />
                   </div>
                   <input
                     type="email"
@@ -129,7 +129,7 @@ const SignIn: React.FC = () => {
                 <label htmlFor="password">Password</label>
                 <div className="input-container">
                   <div className="input-icon">
-                    <MdLock />
+                    <Lock />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -145,7 +145,7 @@ const SignIn: React.FC = () => {
                     onClick={togglePasswordVisibility}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+                    {showPassword ? <EyeOff /> : <Eye />}
                   </button>
                 </div>
               </div>
@@ -175,9 +175,9 @@ const SignIn: React.FC = () => {
             </div>
 
             <button type="button" className="google-signin-button" onClick={handleGoogleSignIn}>
-              <div className="google-icon">
-                <FcGoogle />
-              </div>
+              <span className="google-icon">
+                <FcGoogle size={24} />
+              </span>
               Sign in with Google
             </button>
 
@@ -212,7 +212,6 @@ const SignIn: React.FC = () => {
           </div>
         </div>
       )}
-      <Footer />
     </>
   );
 };
