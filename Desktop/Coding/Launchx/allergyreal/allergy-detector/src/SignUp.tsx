@@ -198,7 +198,7 @@ const SignUp: React.FC = () => {
             </div>
             <button type="button" className="google-signup-button" onClick={handleGoogleSignUp} disabled={loading}>
               <span className="google-icon">
-                <FcGoogle size={24} />
+                {FcGoogle({ size: 24 })}
               </span>
               Sign up with Google
             </button>

@@ -6,11 +6,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-if (!GROQ_API_KEY) {
-  throw new Error('GROQ API key is not set. Please set GROQ_API_KEY in your environment.');
-}
-
 app.get('/', (req, res) => {
   res.send('Server is running!');
 });
@@ -22,7 +17,7 @@ app.post('/api/generate-summary', async (req, res) => {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Authorization': 'Bearer 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',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -46,7 +41,7 @@ app.post('/api/analyze-ingredient', async (req, res) => {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Authorization': 'Bearer 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',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

@@ -25,10 +25,7 @@ interface AllergenReport {
 }
 
 // Using Groq API
-const GROQ_API_KEY = process.env.REACT_APP_GROQ_API_KEY;
-if (!GROQ_API_KEY) {
-  throw new Error('GROQ API key is not set. Please set REACT_APP_GROQ_API_KEY in your environment.');
-}
+const GROQ_API_KEY = process.env.REACT_APP_GROQ_API_KEY || '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 // Rate limiting
