@@ -66,6 +66,12 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Python
 __pycache__/
 *.py[cod]
@@ -78,16 +84,13 @@ ENV/
 env.bak/
 venv.bak/
 
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
+# Backup files
+*.backup
+*.bak
 
 # Temporary files
 *.tmp
 *.temp
-*.backup
 
 # User-specific files
 .cursor/
