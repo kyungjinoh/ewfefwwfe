@@ -7,6 +7,7 @@ import { addDoc, collection, serverTimestamp, getDoc, doc } from 'firebase/fires
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { GroqService } from './services/groqService';
+import { useAccessControl } from './hooks/useAccessControl';
 
 const symptomOptions = [
   'Hives',
@@ -55,6 +56,13 @@ const symptomOptions = [
 ];
 
 const LogReaction: React.FC = () => {
+  const { redirectIfNoAccess } = useAccessControl();
+  
+  // Check access on component mount
+  useEffect(() => {
+    redirectIfNoAccess();
+  }, [redirectIfNoAccess]);
+
   const [step, setStep] = useState(0);
   const [time, setTime] = useState('');
   const [severity, setSeverity] = useState(3);
@@ -84,6 +92,7 @@ const LogReaction: React.FC = () => {
       barcode: '',
       barcodeError: '',
       isBarcodeLoading: false,
+      hasProcessedScanText: false,
     },
   ]);
   const [activeProduct, setActiveProduct] = useState(0);
@@ -112,9 +121,12 @@ const LogReaction: React.FC = () => {
       barcode: '',
       barcodeError: '',
       isBarcodeLoading: false,
+      hasProcessedScanText: false,
     },
   ]);
   const [isSafeFoodSubmitting, setIsSafeFoodSubmitting] = useState(false);
+
+  console.log('LogReaction render, step:', step);
 
   // Function to clean AI response and remove asterisks
   const cleanAIResponse = (response: string): string[] => {
@@ -150,25 +162,40 @@ const LogReaction: React.FC = () => {
 
   const analyzeWithAI = async () => {
     setIsAnalyzing(true);
+    console.log('analyzeWithAI: started');
     try {
       const timeSinceCondition = calculateTimeSinceCondition();
-      
+      console.log('analyzeWithAI: timeSinceCondition', timeSinceCondition);
+      console.log('analyzeWithAI: symptoms', symptoms);
+      console.log('analyzeWithAI: symptomDesc', symptomDesc);
       const analysis = await GroqService.analyzeClinicalSymptoms(symptoms, symptomDesc, timeSinceCondition);
+      console.log('analyzeWithAI: analysis result', analysis);
       setAiAnalysis(analysis);
-
+      console.log('analyzeWithAI: setAiAnalysis done, moving to step 2');
+      setStep(2);
     } catch (error) {
       console.error('AI Analysis error:', error);
       setAiAnalysis('Unable to perform clinical analysis at this time. Please consult with a healthcare professional.');
     } finally {
       setIsAnalyzing(false);
+      console.log('analyzeWithAI: finished');
     }
   };
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Step 1 submit triggered');
+    console.log('Time:', time);
+    console.log('Symptoms:', symptoms);
+    console.log('SymptomDesc:', symptomDesc);
+    console.log('Form valid:', time && symptoms.length > 0 && symptomDesc.trim());
+    
     if (time && symptoms.length > 0 && symptomDesc.trim()) {
+      console.log('Proceeding to analyze with AI...');
       analyzeWithAI();
       setStep(2);
+    } else {
+      console.log('Form validation failed');
     }
   };
 
@@ -216,6 +243,51 @@ const LogReaction: React.FC = () => {
       }
     } catch (err) {
       setProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'Error fetching barcode.' } : pr));
+    }
+  };
+
+  const fetchSafeFoodBarcodeIngredients = async (idx: number) => {
+    setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: true, barcodeError: '' } : pr));
+    const barcode = safeFoodProducts[idx].barcode?.trim();
+    if (!barcode) {
+      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'Please enter a barcode.' } : pr));
+      return;
+    }
+    try {
+      const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.status === 1 && data.product && Array.isArray(data.product.ingredients) && data.product.ingredients.length > 0) {
+        // Use the 'ingredients' array, join all 'text' fields
+        const ingredientsArr = data.product.ingredients.map((ing: any) => ing.text).filter(Boolean);
+        const ingredientsText = ingredientsArr.join(', ');
+        // Also get allergens
+        const allergensArr = Array.isArray(data.product.allergens_tags) ? data.product.allergens_tags.map((a: string) => a.replace(/^en:/, '').replace(/_/g, ' ').toLowerCase()) : [];
+        const groqResponse = await GroqService.extractIngredients(ingredientsText);
+        const list = cleanAIResponse(groqResponse);
+          // Add allergens (lowercased, no duplicates)
+          const allItems = [
+            ...list,
+            ...allergensArr.filter((a: string) => !list.includes(a))
+          ];
+          if (allItems.length === 0) {
+            setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'No ingredients found for this barcode.' } : pr));
+          } else {
+            setSafeFoodProducts(p => p.map((pr, i) => i === idx ? {
+              ...pr,
+              isBarcodeLoading: false,
+              barcodeError: '',
+              commonList: [
+                ...pr.commonList,
+                ...allItems.filter((ing: string) => !pr.commonList.map(x => x.toLowerCase().trim()).includes(ing.toLowerCase().trim()))
+              ]
+            } : pr));
+        }
+      } else {
+        setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'Product not found.' } : pr));
+      }
+    } catch (err) {
+      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isBarcodeLoading: false, barcodeError: 'Error fetching barcode.' } : pr));
     }
   };
 
@@ -334,7 +406,7 @@ const LogReaction: React.FC = () => {
                 <button className="log-reaction-btn" onClick={() => setSafeFoodStep(1)}>Begin Logging</button>
               </div>
             </div>
-          ) : step > 0 ? (
+          ) : step === 1 ? (
             <div className="log-reaction-card step-card">
               <div className="log-reaction-icon">
                 <ClipboardCheck size={40} />
@@ -398,7 +470,12 @@ const LogReaction: React.FC = () => {
                     required
                   />
                 </label>
-                <button className="log-reaction-btn" type="submit" disabled={!time || symptoms.length === 0 || !symptomDesc.trim()}>
+                <button 
+                  className="log-reaction-btn" 
+                  type="submit" 
+                  disabled={!time || symptoms.length === 0 || !symptomDesc.trim()}
+                  onClick={() => console.log('Next button clicked')}
+                >
                   {isAnalyzing ? 'Analyzing...' : 'Next'}
                 </button>
               </form>
@@ -559,7 +636,7 @@ const LogReaction: React.FC = () => {
                                     style={{ display: 'none' }}
                                     onChange={async e => {
                                       const file = e.target.files && e.target.files[0];
-                                      setProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanText: '', scanError: '' } : pr));
+                                      setProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanText: '', scanError: '', hasProcessedScanText: false } : pr));
                                       if (!file) return;
                                       setProducts(p => p.map((pr, i) => i === idx ? { ...pr, isScanning: true } : pr));
                                       try {
@@ -575,7 +652,7 @@ const LogReaction: React.FC = () => {
                                         if (!response.ok) throw new Error('Failed to detect text.');
                                         const data = await response.json();
                                         if (Array.isArray(data) && data.length > 0 && data[0].text) {
-                                          setProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanText: data.map((item: any) => item.text).join(' ') } : pr));
+                                          setProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanText: data.map((item: any) => item.text).join(' '), hasProcessedScanText: false } : pr));
                                         } else {
                                           setProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanError: 'No ingredient detected.' } : pr));
                                         }
@@ -592,11 +669,11 @@ const LogReaction: React.FC = () => {
                               </div>
                               {/* AI extraction and auto-add logic for each product */}
                               {(() => {
-                                if (product.scanText && !product.isListing && !product.listError && !product.isEditingOrDeleting) {
+                                if (product.scanText && !product.isListing && !product.listError && !product.isEditingOrDeleting && !product.hasProcessedScanText) {
                                   // Helper to check if an item is deleted
                                   const isDeleted = (item: string) => product.deletedItemsRef.includes(item.toLowerCase().trim());
                                   (async () => {
-                                    setProducts(p => p.map((pr, i) => i === idx ? { ...pr, isListing: true, listError: '' } : pr));
+                                    setProducts(p => p.map((pr, i) => i === idx ? { ...pr, isListing: true, listError: '', hasProcessedScanText: true } : pr));
                                     try {
                                       const groqResponse = await GroqService.extractIngredients(product.scanText);
                                       const list = cleanAIResponse(groqResponse);
@@ -661,7 +738,7 @@ const LogReaction: React.FC = () => {
                                 />
                                 <button
                                   className="log-reaction-btn"
-                                  style={{ minWidth: 120 }}
+                                  style={{ minWidth: 120, background: 'linear-gradient(90deg,#22c55e,#16a34a)' }}
                                   onClick={() => fetchBarcodeIngredients(idx)}
                                   disabled={product.isBarcodeLoading}
                                 >
@@ -781,6 +858,7 @@ const LogReaction: React.FC = () => {
                 barcode: '',
                 barcodeError: '',
                 isBarcodeLoading: false,
+                hasProcessedScanText: false,
               }])}>Add Product</button>
               <div className="step-navigation" style={{ marginTop: 32, width: '100%', maxWidth: 400, display: 'flex', justifyContent: 'space-between' }}>
                 <button className="log-reaction-btn secondary" onClick={() => setStep(2)}>
@@ -1027,10 +1105,33 @@ const LogReaction: React.FC = () => {
               </div>
               
               {safeFoodProducts.map((product, idx) => (
-                <div key={idx} style={{ width: '100%', maxWidth: 700, marginBottom: 24, borderRadius: 18, boxShadow: '0 8px 32px rgba(30,64,175,0.10)', background: 'linear-gradient(135deg, #f0f4ff 0%, #e0e7ef 100%)', padding: 0, overflow: 'hidden' }}>
+                <div key={idx} style={{ width: '100%', maxWidth: 700, marginBottom: 24, borderRadius: 18, boxShadow: '0 8px 32px rgba(30,64,175,0.10)', background: 'linear-gradient(135deg, #f0f4ff 0%, #e0e7ef 100%)', padding: 0, overflow: 'hidden', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#22c55e', color: '#fff', padding: '1.1rem 2rem', cursor: 'pointer' }} onClick={() => setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, expanded: !pr.expanded } : pr))}>
-                    <div style={{ fontWeight: 700, fontSize: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: 18 }}>
                       {product.name ? product.name : `Safe Food ${idx + 1}`}
+                      <button
+                        onClick={e => { e.stopPropagation(); setSafeFoodProducts(p => p.filter((_, i) => i !== idx)); }}
+                        title="Remove Product"
+                        style={{
+                          marginLeft: 12,
+                          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: 32,
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(239, 68, 68, 0.18)',
+                          transition: 'all 0.2s ease',
+                          zIndex: 10,
+                          fontSize: 16
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
                     </div>
                     <div style={{ fontSize: 22 }}>{product.expanded ? <ChevronDown size={22} /> : <ChevronRight size={22} />}</div>
                   </div>
@@ -1120,42 +1221,113 @@ const LogReaction: React.FC = () => {
                           {/* Scan Ingredients */}
                           {product.entryMode === 'scan' && (
                             <div style={{ marginBottom: 36, width: '100%' }}>
-                              <label className="log-reaction-label">Scan Ingredients Text</label>
-                              <textarea
-                                className="log-reaction-textarea"
-                                value={product.scanText}
-                                onChange={e => setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanText: e.target.value } : pr))}
-                                placeholder="Paste or type ingredient list here..."
-                                rows={4}
-                              />
-                              <button
-                                className="log-reaction-btn"
-                                type="button"
-                                style={{ marginTop: 12, background: 'linear-gradient(90deg,#22c55e,#16a34a)' }}
-                                onClick={async () => {
-                                  if (!product.scanText.trim()) return;
-                                  setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isListing: true, listError: '' } : pr));
-                                  try {
-                                    const groqResponse = await GroqService.extractIngredients(product.scanText);
-                                    const list = cleanAIResponse(groqResponse);
-                                    if (list.length === 0) {
+                              <label className="log-reaction-label">Scan Ingredients from Product</label>
+                              <div style={{
+                                background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%)',
+                                border: '1.5px solid #c7d2fe',
+                                borderRadius: 16,
+                                padding: '1.2rem 1rem',
+                                marginBottom: 12,
+                                boxShadow: '0 2px 12px rgba(30,64,175,0.06)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 16
+                              }}>
+                                <label htmlFor={`safe-food-scan-file-input-${idx}`} style={{
+                                  background: 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)',
+                                  color: '#fff',
+                                  borderRadius: 8,
+                                  padding: '0.7rem 1.5rem',
+                                  fontWeight: 600,
+                                  fontSize: 16,
+                                  cursor: 'pointer',
+                                  marginBottom: 8,
+                                  boxShadow: '0 2px 8px rgba(34,197,94,0.10)',
+                                  transition: 'background 0.2s',
+                                  display: 'inline-block',
+                                }}>
+                                  {product.isScanning ? 'Uploading...' : 'Choose Image'}
+                                  <input
+                                    id={`safe-food-scan-file-input-${idx}`}
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={async e => {
+                                      const file = e.target.files && e.target.files[0];
+                                      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanText: '', scanError: '', hasProcessedScanText: false } : pr));
+                                      if (!file) return;
+                                      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isScanning: true } : pr));
+                                      try {
+                                        const formData = new FormData();
+                                        formData.append('image', file);
+                                        const response = await fetch('https://api.api-ninjas.com/v1/imagetotext', {
+                                          method: 'POST',
+                                          headers: {
+                                            'X-Api-Key': 'K5j9BQ5tst4tX5LYvHj1XQ==9cihtgtz6eD4DL0s',
+                                          },
+                                          body: formData,
+                                        });
+                                        if (!response.ok) throw new Error('Failed to detect text.');
+                                        const data = await response.json();
+                                        if (Array.isArray(data) && data.length > 0 && data[0].text) {
+                                          setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanText: data.map((item: any) => item.text).join(' '), hasProcessedScanText: false } : pr));
+                                        } else {
+                                          setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanError: 'No ingredient detected.' } : pr));
+                                        }
+                                      } catch (err: any) {
+                                        setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, scanError: 'Error detecting text from image.' } : pr));
+                                      } finally {
+                                        setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isScanning: false } : pr));
+                                      }
+                                    }}
+                                  />
+                                </label>
+                                {product.isScanning && <div style={{ color: '#22c55e', fontWeight: 600, fontSize: 16, marginBottom: 8, letterSpacing: 0.5 }}>Detecting text...</div>}
+                                {product.scanError && <div style={{ color: '#ef4444', fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{product.scanError}</div>}
+                              </div>
+                              {/* AI extraction and auto-add logic for each product */}
+                              {(() => {
+                                if (product.scanText && !product.isListing && !product.listError && !product.isEditingOrDeleting && !product.hasProcessedScanText) {
+                                  // Helper to check if an item is deleted
+                                  const isDeleted = (item: string) => product.deletedItemsRef.includes(item.toLowerCase().trim());
+                                  (async () => {
+                                    setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isListing: true, listError: '', hasProcessedScanText: true } : pr));
+                                    try {
+                                      const groqResponse = await GroqService.extractIngredients(product.scanText);
+                                      const list = cleanAIResponse(groqResponse);
+                                        if (list.length === 0) {
+                                          const scanTextLower = product.scanText.trim().toLowerCase();
+                                          setSafeFoodProducts(p => p.map((pr, i) => i === idx ? {
+                                            ...pr,
+                                            commonList: pr.commonList.map(i => i.toLowerCase().trim()).includes(scanTextLower) || isDeleted(product.scanText) ? pr.commonList : [...pr.commonList, product.scanText.trim().toLowerCase()]
+                                          } : pr));
+                                        } else {
+                                          setSafeFoodProducts(p => p.map((pr, i) => i === idx ? {
+                                            ...pr,
+                                            commonList: [
+                                              ...pr.commonList,
+                                              ...list.filter((i: string) => {
+                                                const lower = i.toLowerCase().trim();
+                                                return !pr.commonList.map(x => x.toLowerCase().trim()).includes(lower) && !isDeleted(i);
+                                              })
+                                            ]
+                                          } : pr));
+                                      }
+                                    } catch (err: any) {
                                       const scanTextLower = product.scanText.trim().toLowerCase();
-                                      const words = scanTextLower.split(/[,\s]+/).filter(word => word.length > 2);
-                                      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, commonList: [...pr.commonList, ...words.filter((word: string) => !pr.commonList.includes(word))], isListing: false } : pr));
-                                    } else {
-                                      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, commonList: [...pr.commonList, ...list.filter((item: string) => !pr.commonList.includes(item))], isListing: false } : pr));
+                                      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? {
+                                        ...pr,
+                                        commonList: pr.commonList.map(i => i.toLowerCase().trim()).includes(scanTextLower) || isDeleted(product.scanText) ? pr.commonList : [...pr.commonList, product.scanText.trim().toLowerCase()]
+                                      } : pr));
+                                    } finally {
+                                      setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isListing: false } : pr));
                                     }
-                                  } catch (error) {
-                                    setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isListing: false, listError: 'Failed to process ingredients' } : pr));
-                                  }
-                                }}
-                                disabled={!product.scanText.trim() || product.isListing}
-                              >
-                                {product.isListing ? 'Processing...' : 'Extract Ingredients'}
-                              </button>
-                              {product.listError && (
-                                <p style={{ color: '#ef4444', fontSize: 14, marginTop: 8 }}>{product.listError}</p>
-                              )}
+                                  })();
+                                }
+                                return null;
+                              })()}
+                              {product.listError && product.listError !== 'Unable to extract ingredients.' && <div style={{ color: 'red', marginTop: 6 }}>{product.listError}</div>}
                             </div>
                           )}
                           
@@ -1163,76 +1335,136 @@ const LogReaction: React.FC = () => {
                           {product.entryMode === 'barcode' && (
                             <div style={{ marginBottom: 36, width: '100%' }}>
                               <label className="log-reaction-label">Scan Barcode</label>
-                              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <div style={{
+                                background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%)',
+                                border: '1.5px solid #c7d2fe',
+                                borderRadius: 16,
+                                padding: '1.2rem 1rem',
+                                marginBottom: 12,
+                                boxShadow: '0 2px 12px rgba(30,64,175,0.06)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 16
+                              }}>
                                 <input
                                   className="log-reaction-input"
                                   type="text"
-                                  value={product.barcode}
+                                  placeholder="Enter barcode number..."
+                                  value={product.barcode || ''}
+                                  style={{ maxWidth: 220, marginBottom: 8, textAlign: 'center' }}
                                   onChange={e => setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, barcode: e.target.value } : pr))}
-                                  placeholder="Enter barcode..."
-                                  style={{ flex: 1 }}
+                                  onKeyDown={e => { if (e.key === 'Enter') fetchSafeFoodBarcodeIngredients(idx); }}
                                 />
                                 <button
                                   className="log-reaction-btn"
-                                  type="button"
-                                  style={{ minWidth: 100, background: 'linear-gradient(90deg,#22c55e,#16a34a)' }}
-                                  onClick={() => fetchBarcodeIngredients(idx)}
+                                  style={{ minWidth: 120, background: 'linear-gradient(90deg,#22c55e,#16a34a)' }}
+                                  onClick={() => fetchSafeFoodBarcodeIngredients(idx)}
                                   disabled={product.isBarcodeLoading}
                                 >
-                                  {product.isBarcodeLoading ? 'Loading...' : 'Fetch'}
+                                  {product.isBarcodeLoading ? 'Fetching...' : 'Fetch Ingredients'}
                                 </button>
+                                {product.barcodeError && <div style={{ color: '#ef4444', fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{product.barcodeError}</div>}
                               </div>
-                              {product.barcodeError && (
-                                <p style={{ color: '#ef4444', fontSize: 14, marginTop: 8 }}>{product.barcodeError}</p>
-                              )}
                             </div>
                           )}
                           
                           {/* Ingredients List */}
                           {product.commonList.length > 0 && (
-                            <div style={{ width: '100%', maxWidth: 400 }}>
+                            <div style={{ width: '100%', maxWidth: 600 }}>
                               <label className="log-reaction-label">Ingredients</label>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                                {product.commonList.map((ingredient, iidx) => (
-                                  <span key={iidx} style={{ 
-                                    background: 'linear-gradient(90deg,#22c55e,#16a34a)', 
-                                    color: '#fff', 
-                                    padding: '6px 12px', 
-                                    borderRadius: 16, 
-                                    fontSize: 14, 
-                                    fontWeight: 600,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 6
-                                  }}>
-                                    {ingredient}
-                                    <button
-                                      onClick={() => {
-                                        setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { 
-                                          ...pr, 
-                                          commonList: pr.commonList.filter((_, index) => index !== iidx),
-                                          deletedItemsRef: [...pr.deletedItemsRef, ingredient.toLowerCase().trim()]
-                                        } : pr));
-                                      }}
-                                      style={{
-                                        background: 'rgba(255, 255, 255, 0.2)',
-                                        border: 'none',
-                                        borderRadius: '50%',
-                                        width: 18,
-                                        height: 18,
-                                        color: '#fff',
-                                        cursor: 'pointer',
-                                        fontSize: 12,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                      }}
-                                    >
-                                      ×
-                                    </button>
-                                  </span>
+                              <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                {product.commonList.map((item, iidx) => (
+                                  <li key={iidx} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, background: 'linear-gradient(90deg,#22c55e,#16a34a)', color: '#fff', padding: '6px 12px', borderRadius: 16, fontSize: 14, fontWeight: 600, minWidth: '500px' }}>
+                                    {product.editIndex === iidx ? (
+                                      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                        <input
+                                          className="log-reaction-input"
+                                          style={{ flex: 1, marginRight: 8 }}
+                                          value={product.editValue}
+                                          onChange={e => setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, editValue: e.target.value } : pr))}
+                                          onFocus={() => setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, isEditingOrDeleting: true } : pr))}
+                                        />
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                          <button
+                                            className="log-reaction-btn"
+                                            style={{ minWidth: 50, background: 'linear-gradient(90deg,#22c55e,#16a34a)' }}
+                                            onClick={() => {
+                                              if (product.editValue.trim()) {
+                                                setSafeFoodProducts(p => p.map((pr, i) => i === idx ? {
+                                                  ...pr,
+                                                  commonList: pr.commonList.map((v, j) => j === iidx ? pr.editValue.trim().toLowerCase() : v),
+                                                  editIndex: null,
+                                                  editValue: '',
+                                                  isEditingOrDeleting: true,
+                                                } : pr));
+                                              }
+                                            }}
+                                          >
+                                            Save
+                                          </button>
+                                          <button
+                                            className="log-reaction-btn secondary"
+                                            style={{ minWidth: 50, background: 'linear-gradient(90deg,#ef4444,#dc2626)' }}
+                                            onClick={() => {
+                                              setSafeFoodProducts(p => p.map((pr, i) => {
+                                                if (i === idx) {
+                                                  const toDelete = pr.commonList[iidx];
+                                                  const lower = toDelete.toLowerCase().trim();
+                                                  return {
+                                                    ...pr,
+                                                    commonList: pr.commonList.filter((_, j) => j !== iidx),
+                                                    deletedItemsRef: pr.deletedItemsRef.includes(lower) ? pr.deletedItemsRef : [...pr.deletedItemsRef, lower],
+                                                    editIndex: pr.editIndex === iidx ? null : pr.editIndex,
+                                                    editValue: pr.editIndex === iidx ? '' : pr.editValue,
+                                                    isEditingOrDeleting: true,
+                                                  };
+                                                }
+                                                return pr;
+                                              }));
+                                            }}
+                                          >
+                                            Delete
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <span style={{ flex: 1, fontWeight: 500, color: '#fff' }}>{item}</span>
+                                        <button
+                                          className="log-reaction-btn"
+                                          style={{ minWidth: 50, marginRight: 4, background: 'linear-gradient(90deg,#f59e42,#fbbf24)' }}
+                                          onClick={() => setSafeFoodProducts(p => p.map((pr, i) => i === idx ? { ...pr, editIndex: iidx, editValue: item } : pr))}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          className="log-reaction-btn secondary"
+                                          style={{ minWidth: 50, background: 'linear-gradient(90deg,#ef4444,#dc2626)' }}
+                                          onClick={() => {
+                                            setSafeFoodProducts(p => p.map((pr, i) => {
+                                              if (i === idx) {
+                                                const toDelete = pr.commonList[iidx];
+                                                const lower = toDelete.toLowerCase().trim();
+                                                return {
+                                                  ...pr,
+                                                  commonList: pr.commonList.filter((_, j) => j !== iidx),
+                                                  deletedItemsRef: pr.deletedItemsRef.includes(lower) ? pr.deletedItemsRef : [...pr.deletedItemsRef, lower],
+                                                  editIndex: pr.editIndex === iidx ? null : pr.editIndex,
+                                                  editValue: pr.editIndex === iidx ? '' : pr.editValue,
+                                                };
+                                              }
+                                              return pr;
+                                            }));
+                                          }}
+                                        >
+                                          Delete
+                                        </button>
+                                      </>
+                                    )}
+                                  </li>
                                 ))}
-                              </div>
+                              </ul>
                             </div>
                           )}
                         </div>
@@ -1265,6 +1497,7 @@ const LogReaction: React.FC = () => {
                   barcode: '',
                   barcodeError: '',
                   isBarcodeLoading: false,
+                  hasProcessedScanText: false,
                 }])}
               >
                 Add Another Safe Food
@@ -1288,19 +1521,6 @@ const LogReaction: React.FC = () => {
           ) : safeFoodStep === 2 ? (
             <div style={{ width: '100%', maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                  borderRadius: '50%',
-                  width: 70,
-                  height: 70,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 24px rgba(34,197,94,0.12)',
-                  marginBottom: 12
-                }}>
-                  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                </div>
                 <h2 className="log-reaction-title" style={{ textAlign: 'center', marginBottom: 4, fontWeight: 800, fontSize: 32, color: '#22c55e', letterSpacing: 0.5 }}>Step 2: Confirmation</h2>
                 <p className="log-reaction-desc" style={{ textAlign: 'center', marginBottom: 18, color: '#64748b', fontSize: 18 }}>Review your safe food information before submitting.</p>
               </div>

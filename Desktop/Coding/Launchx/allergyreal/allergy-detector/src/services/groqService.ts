@@ -192,30 +192,28 @@ Provide a clear, medical-focused summary that highlights the most important patt
   static async generateTestKitSuggestions(topAllergens: any[]): Promise<string> {
     const prompt = `Based on the following allergy data, suggest exactly 5 specific allergy test kits that would be most appropriate for this user:
 
-Top Allergens:
+Top Allergens (Most Likely Allergens):
 ${topAllergens.map((allergen, idx) => 
   `${idx + 1}. ${allergen.ingredient} (Frequency: ${allergen.frequency}, Avg Severity: ${allergen.averageSeverity.toFixed(1)}/10)`
 ).join('\n')}
 
-Suggest exactly 5 specific test kits with brand names. Include:
-- Food allergy test kits (for the most frequent food allergens)
-- Environmental allergy test kits (if environmental factors are present)
-- At-home vs. clinical testing options
-- Brief explanation of why each test is recommended
+Return ONLY the names of exactly 5 specific test kits with brand names. Do not include any explanations, descriptions, or asterisks. Format as a simple numbered list (1-5) with just the test kit names.
 
-Format as a numbered list (1-5) with:
-1. Test kit name and brand
-2. Brief description of what it tests
-3. Why it's recommended for this user's allergen profile
+Example format:
+1. Test Kit Name by Brand
+2. Test Kit Name by Brand
+3. Test Kit Name by Brand
+4. Test Kit Name by Brand
+5. Test Kit Name by Brand
 
-Be specific with test kit names and provide clear, concise explanations.`;
+Focus on food allergy test kits that specifically test for the most likely allergens listed above. Select test kits that match those allergens as closely as possible. Be specific with test kit names and brands. If possible, prefer kits that cover multiple of the top allergens.`;
 
     try {
       const response = await this.callGroqAPI(
         prompt,
-        'You are a medical allergy specialist. Suggest exactly 5 specific test kits with brand names based on allergen patterns. Format as a clear numbered list.',
+        'You are a medical allergy specialist. Return ONLY the names of exactly 5 specific test kits with brand names. No explanations, descriptions, or asterisks. Just a numbered list of test kit names. The test kits should be highly based on the most likely allergens provided.',
         0.3,
-        600
+        300
       );
       return response;
     } catch (error) {

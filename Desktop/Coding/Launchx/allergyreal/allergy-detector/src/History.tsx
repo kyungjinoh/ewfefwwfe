@@ -5,6 +5,7 @@ import { History as HistoryIcon, ClipboardList, BarChart3, CheckCircle, Trash2 }
 import { db } from './firebase';
 import { collection, query, where, getDocs, deleteDoc, doc, setDoc, getDoc, addDoc } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
+import { useAccessControl } from './hooks/useAccessControl';
 
 interface LogProduct {
   name: string;
@@ -31,6 +32,13 @@ interface SafeFoodLog {
 }
 
 const History: React.FC = () => {
+  const { redirectIfNoAccess } = useAccessControl();
+  
+  // Check access on component mount
+  useEffect(() => {
+    redirectIfNoAccess();
+  }, [redirectIfNoAccess]);
+
   const [logs, setLogs] = useState<AllergyLog[]>([]);
   const [safeFoodLogs, setSafeFoodLogs] = useState<SafeFoodLog[]>([]);
   const [activeTab, setActiveTab] = useState<'allergy' | 'safe-food'>('allergy');
@@ -41,6 +49,8 @@ const History: React.FC = () => {
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
   const [deletingLogs, setDeletingLogs] = useState<Set<string>>(new Set());
   const [deletedLogs, setDeletedLogs] = useState<Set<string>>(new Set());
+  const [deletingSafeFoods, setDeletingSafeFoods] = useState<Set<string>>(new Set());
+  const [deletedSafeFoods, setDeletedSafeFoods] = useState<Set<string>>(new Set());
   const { user } = useAuth();
 
   // Create a hash of logs data for comparison
@@ -221,7 +231,8 @@ const History: React.FC = () => {
           docId: doc.id,
         });
       });
-      
+      // Sort by time descending (latest first)
+      safeFoodLogsData.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
       setSafeFoodLogs(safeFoodLogsData);
     } catch (err) {
       console.error('Error fetching safe food logs:', err);
@@ -252,6 +263,16 @@ const History: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [deletedLogs]);
+
+  // Clear safe food success notification after 3 seconds
+  useEffect(() => {
+    if (deletedSafeFoods.size > 0) {
+      const timer = setTimeout(() => {
+        setDeletedSafeFoods(new Set());
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [deletedSafeFoods]);
 
   const handleShowMore = () => {
     setLogsToShow(prev => prev + 3);
@@ -345,6 +366,71 @@ const History: React.FC = () => {
     }
   };
 
+  const handleDeleteSafeFood = async (docId: string) => {
+    if (!docId) return;
+    
+    if (!window.confirm('Are you sure you want to delete this safe food log? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      setDeletingSafeFoods(prev => new Set(prev).add(docId));
+      
+      // Fetch the safe food document before deleting
+      const safeFoodRef = doc(db, 'safe_foods', docId);
+      const safeFoodSnap = await getDoc(safeFoodRef);
+      
+      if (!safeFoodSnap.exists()) {
+        alert('Safe food log not found in Firestore.');
+        setDeletingSafeFoods(prev => { const newSet = new Set(prev); newSet.delete(docId); return newSet; });
+        return;
+      }
+      
+      const safeFoodData = safeFoodSnap.data();
+      
+      if (safeFoodData.uid !== user?.uid) {
+        alert('You do not have permission to delete this safe food log. Log UID: ' + safeFoodData.uid + ', Your UID: ' + user?.uid);
+        setDeletingSafeFoods(prev => { const newSet = new Set(prev); newSet.delete(docId); return newSet; });
+        return;
+      }
+      
+      // Remove from UI immediately for better UX
+      const updatedSafeFoodLogs = safeFoodLogs.filter(log => log.docId !== docId);
+      setSafeFoodLogs(updatedSafeFoodLogs);
+      
+      // Delete from Firestore
+      await deleteDoc(safeFoodRef);
+      
+      // Refetch safe food logs from Firestore to ensure UI is in sync
+      const q = query(collection(db, 'safe_foods'), where('uid', '==', user?.uid));
+      const querySnapshot = await getDocs(q);
+      
+      const freshSafeFoodLogs: SafeFoodLog[] = [];
+      querySnapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        freshSafeFoodLogs.push({
+          time: data.time,
+          products: data.products || [],
+          docId: docSnap.id,
+        });
+      });
+      
+      setSafeFoodLogs(freshSafeFoodLogs);
+      
+      setDeletedSafeFoods(prev => new Set(prev).add(docId));
+      
+    } catch (err) {
+      console.error('Error deleting safe food log:', err);
+      alert('Failed to delete safe food log. Please try again. Error: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setDeletingSafeFoods(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(docId);
+        return newSet;
+      });
+    }
+  };
+
   return (
     <div className="dashboard-layout">
       <style>
@@ -365,7 +451,7 @@ const History: React.FC = () => {
       <main className="dashboard-main">
         <div className="dashboard-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
           {/* Success Notification */}
-          {deletedLogs.size > 0 && (
+          {(deletedLogs.size > 0 || deletedSafeFoods.size > 0) && (
             <div style={{
               position: 'fixed',
               top: 20,
@@ -380,7 +466,11 @@ const History: React.FC = () => {
               fontWeight: 600,
               fontSize: 14
             }}>
-              Log deleted successfully!
+              {deletedLogs.size > 0 && deletedSafeFoods.size > 0 
+                ? 'Logs deleted successfully!' 
+                : deletedLogs.size > 0 
+                  ? 'Allergy log deleted successfully!' 
+                  : 'Safe food log deleted successfully!'}
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32, marginTop: 24 }}>
@@ -869,7 +959,7 @@ const History: React.FC = () => {
                   </div>
                 </div>
               )})}
-              </div>
+            </div>
             )
           ) : activeTab === 'safe-food' ? (
             safeFoodLogs.length === 0 ? (
@@ -908,6 +998,55 @@ const History: React.FC = () => {
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease'
                   }}>
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => log.docId && handleDeleteSafeFood(log.docId)}
+                      disabled={deletingSafeFoods.has(log.docId || '')}
+                      style={{
+                        position: 'absolute',
+                        top: 20,
+                        right: 20,
+                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 40,
+                        height: 40,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 16px rgba(239, 68, 68, 0.25)',
+                        transition: 'all 0.3s ease',
+                        zIndex: 10,
+                        opacity: deletingSafeFoods.has(log.docId || '') ? 0.6 : 1
+                      }}
+                      onMouseOver={(e) => {
+                        if (!deletingSafeFoods.has(log.docId || '')) {
+                          e.currentTarget.style.transform = 'scale(1.1)';
+                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.35)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(239, 68, 68, 0.25)';
+                      }}
+                      title="Delete safe food log"
+                    >
+                      {deletingSafeFoods.has(log.docId || '') ? (
+                        <div style={{
+                          width: 16,
+                          height: 16,
+                          border: '2px solid #fff',
+                          borderTop: '2px solid transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                      ) : (
+                        <Trash2 size={18} />
+                      )}
+                    </button>
+                    
                     <div style={{ 
                       position: 'absolute', 
                       top: 20, 
@@ -1006,8 +1145,8 @@ const History: React.FC = () => {
                                   borderRadius: 8
                                 }}>
                                   Type: {product.exposureType}
-            </div>
-          )}
+                                </div>
+                              )}
                               {product.barcode && (
                                 <div style={{ 
                                   color: '#16a34a', 

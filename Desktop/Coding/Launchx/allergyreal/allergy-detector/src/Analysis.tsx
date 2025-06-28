@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 import DashboardSidebar from './DashboardSidebar';
 import { GroqService } from './services/groqService';
 import './Dashboard.css';
+import { useAccessControl } from './hooks/useAccessControl';
 
 interface LogProduct {
   name: string;
@@ -55,6 +56,13 @@ interface ChatMessage {
 }
 
 const Analysis: React.FC = () => {
+  const { redirectIfNoAccess } = useAccessControl();
+  
+  // Check access on component mount
+  useEffect(() => {
+    redirectIfNoAccess();
+  }, [redirectIfNoAccess]);
+
   // Add CSS for animations
   React.useEffect(() => {
     const style = document.createElement('style');

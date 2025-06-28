@@ -5,16 +5,6 @@ import './PricingPlan.css';
 
 const plans = [
   {
-    name: 'Free',
-    price: '$0',
-    features: [
-      'Basic Allergen Detection',
-      'Single Document Upload',
-      'Community Support',
-    ],
-    highlight: false,
-  },
-  {
     name: 'Enterprise',
     price: 'Contact Us',
     features: [
@@ -31,14 +21,6 @@ const PricingPlan: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showContact, setShowContact] = useState(false);
-
-  const handleFreeClick = () => {
-    if (user) {
-      navigate('/dashboard');
-    } else {
-      navigate('/signup');
-    }
-  };
 
   const handleEnterpriseClick = () => {
     setShowContact(true);
@@ -64,11 +46,6 @@ const PricingPlan: React.FC = () => {
                 <li key={feature}>{feature}</li>
               ))}
             </ul>
-            {plan.name === 'Free' && (
-              <button className="plan-select-btn" onClick={handleFreeClick} aria-label="Select Free plan">
-                Get Started
-              </button>
-            )}
             {plan.name === 'Enterprise' && (
               <button className="plan-select-btn" onClick={handleEnterpriseClick} aria-label="Contact for Enterprise plan">
                 Contact Sales
