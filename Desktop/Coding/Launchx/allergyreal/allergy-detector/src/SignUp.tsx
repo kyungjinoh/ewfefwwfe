@@ -102,7 +102,7 @@ const SignUp: React.FC = () => {
         <div className="signup-content">
           <div className="signup-card">
             <div className="signup-header">
-              <img src="https://cdn.discordapp.com/attachments/1384526031221817375/1386902983828312214/A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview.png?ex=685c0e4e&is=685abcce&hm=18ec9739025d39dcf0033827fdc2a7664367207be46b432df725f279805e39a9&" alt="AllergyGen AI Logo" style={{height: '2.5rem', width: '2.5rem', objectFit: 'contain', marginBottom: '0.5rem'}} />
+              <img src={require('./A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview (1).png')} alt="AllergyGen AI Logo" style={{height: '2.5rem', width: '2.5rem', objectFit: 'contain', marginBottom: '0.5rem'}} />
               <h1>AllergyGen AI</h1>
               <p>Create your clinical account</p>
             </div>

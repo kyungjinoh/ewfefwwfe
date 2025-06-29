@@ -101,7 +101,7 @@ const Header: React.FC = () => {
       <div className="header-container">
         <div className="header-logo">
           <button onClick={handleLogoClick} className="logo-button" style={{display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'none', border: 'none', padding: 0, cursor: 'pointer'}}>
-            <img src="https://cdn.discordapp.com/attachments/1384526031221817375/1386902983828312214/A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview.png?ex=685c0e4e&is=685abcce&hm=18ec9739025d39dcf0033827fdc2a7664367207be46b432df725f279805e39a9&" alt="AllerGen AI Logo" style={{height: '2.8rem', width: '2.8rem', objectFit: 'contain', marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle'}} />
+            <img src={require('./A_logo_in_vector_graphic_format_is_displayed_on_a_-removebg-preview (1).png')} alt="AllerGen AI Logo" style={{height: '2.8rem', width: '2.8rem', objectFit: 'contain', marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle'}} />
             <span style={{fontSize: '1.7rem', fontWeight: 700, letterSpacing: '0.03em', color: '#1e40af', display: 'inline-block', verticalAlign: 'middle'}}>AllerGen AI</span>
           </button>
         </div>
