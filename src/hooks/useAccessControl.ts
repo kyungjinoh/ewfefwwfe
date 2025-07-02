@@ -14,7 +14,7 @@ const ALLOWED_UNIQUE_IDS = [
   '4f1bdfae-4c8b-4bb9-930f-83561bb7b260',
   '9cdde155-2f46-4a79-9dfc-6e29e69ea403',
   '32f1e358-951e-41be-97ce-3f78b017efb0',
-  '9aefee8f-f7c6-4492-b65f-5fa154bd4640',
+  'allergen1341',
   'd2e8c984-1a34-4c3a-a6bc-ec88b5eecb34',
   'b08a43c3-7b5d-41d1-8e06-e5b3433fd901',
   '8b594b20-b4d2-4fc9-812c-10c3159cb249',
